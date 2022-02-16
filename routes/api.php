@@ -19,9 +19,11 @@ use App\Http\Controllers\API\ProductController;
 
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
-   
+
+Route::resource('products', ProductController::class)->middleware('cors');
+
 Route::middleware('auth:api')->group( function () {
-    Route::resource('products', ProductController::class);
+    Route::post('logout', [RegisterController::class, 'logout']);
 });
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
