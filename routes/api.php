@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\CharacterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,8 +22,10 @@ use App\Http\Controllers\API\UserController;
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
 
+
 Route::middleware('auth:api')->group( function () {
     Route::post('logout', [RegisterController::class, 'logout']);
+    Route::post('character/create/{user_id}', [CharacterController::class, 'create']);
     Route::resource('user' ,UserController::class )->middleware('cors');
 });
 
