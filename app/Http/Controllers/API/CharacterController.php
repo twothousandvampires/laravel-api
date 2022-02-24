@@ -22,7 +22,6 @@ class CharacterController extends BaseController
 
         if(Auth::user()->id == $id){
             try{
-
                 $char = new Character();
                 $char->name = $request->name;
                 $char->class = $request->class_name;
@@ -30,11 +29,8 @@ class CharacterController extends BaseController
                 $char->x = 0;
                 $char->y = 0;
                 $char->save();
-
                 $this->node_service->generateSingleNode(0,0,4,$char->id);
-
                 return $this->sendResponse($char, 'Product retrieved successfully.');
-
             }
             catch(\Exception $e){
 
@@ -48,7 +44,7 @@ class CharacterController extends BaseController
         if(Auth::user()->id == $user_id){
             $char = Character::find($char_id);
             $nodes = $this->node_service->generateNodes($char);
-            return $this->sendResponse([$nodes,$char], 'Product retrieved successfully.');
+            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0], 'Product retrieved successfully.');
         }
     }
 
@@ -64,12 +60,12 @@ class CharacterController extends BaseController
                     $char->x = $request->x;
                     $char->y = $request->y;
                     $char->save();
+                    $new_node->visited = 1;
+                    $new_node->save();
                     $nodes = $this->node_service->generateNodes($char);
-                    return $this->sendResponse([$nodes,$char,0], 'Product retrieved successfully.');
-                    break;
+                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Product retrieved successfully.');
                 case 1:
                     return $this->sendResponse([random_int(5,10),random_int(5,10),1], 'Product retrieved successfully.');
-                    break;
             }
 
         }

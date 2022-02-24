@@ -67,6 +67,8 @@ class NodeService{
         $node->char_id = $char_id;
         $node->type = 4;
         $this->Nomenclature($node);
+        $node->image_offset_x = round(random_int(-50,50)/100,2);
+        $node->image_offset_y = round(random_int(-50,50)/100,2);
         $node->save();
     }
 
@@ -178,10 +180,15 @@ class NodeService{
             $rnd = random_int(0,100);
             if($rnd > 98) { $new_node->type = 2; }
             else if($rnd > 95) { $new_node->type = 3; }
-            else if($rnd > 70) { $new_node->type = 1; }
+            else if($rnd > 90) { $new_node->type = 1; }
             else{
                $new_node->type = 0;
             }
+
+            $new_node->image_offset_x = round(random_int(-50,50)/10,2);
+            $new_node->image_offset_y = round(random_int(-50,50)/10,2);
+
+            $new_node->solar_system_image = 'system_' . random_int(1,2);
 
             $this->Nomenclature($new_node);
 
