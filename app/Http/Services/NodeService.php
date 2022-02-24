@@ -69,6 +69,7 @@ class NodeService{
         $this->Nomenclature($node);
         $node->image_offset_x = round(random_int(-50,50)/100,2);
         $node->image_offset_y = round(random_int(-50,50)/100,2);
+        $node->solar_system_image = 'system_' . random_int(1,2);
         $node->save();
     }
 
