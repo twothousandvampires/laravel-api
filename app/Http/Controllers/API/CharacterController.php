@@ -6,6 +6,7 @@ use App\Http\Services\NodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Character;
+use App\Models\Node;
 
 class CharacterController extends BaseController
 {
@@ -53,14 +54,24 @@ class CharacterController extends BaseController
 
     public function move($user_id,$char_id,Request $request){
         if(Auth::user()->id == $user_id){
+
+            $new_node = Node::getNodeByCoord($request->x,$request->y,$char_id);
+
             $char = Character::find($char_id);
-            $char->x = $request->x;
-            $char->y = $request->y;
-            $char->save();
 
-            $nodes = $this->node_service->generateNodes($char);
+            switch ($new_node->type){
+                case 0:
+                    $char->x = $request->x;
+                    $char->y = $request->y;
+                    $char->save();
+                    $nodes = $this->node_service->generateNodes($char);
+                    return $this->sendResponse([$nodes,$char,0], 'Product retrieved successfully.');
+                    break;
+                case 1:
+                    return $this->sendResponse([random_int(5,10),random_int(5,10),1], 'Product retrieved successfully.');
+                    break;
+            }
 
-            return $this->sendResponse([$nodes,$char], 'Product retrieved successfully.');
         }
     }
 }

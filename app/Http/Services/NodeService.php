@@ -5,8 +5,19 @@ use App\Models\Node;
 
 class NodeService{
 
-    function __construct(){
+    /**
+     * @var \string[][]
+     */
+    private $nomenclature_types;
 
+    function __construct(){
+        $this->nomenclature_types = [
+            ['N','NT','KOP'],
+            ['JS','JSS','Q'],
+            ['OP','POS','OPP'],
+            ['32P','3','1'],
+            ['Home','Hearth','Centro'],
+        ];
     }
 
     public function checkNode($x, $y, $arr){
@@ -54,8 +65,37 @@ class NodeService{
         $node->y = $y;
         $node->links = $links;
         $node->char_id = $char_id;
-        $node->type = 5;
+        $node->type = 4;
+        $this->Nomenclature($node);
         $node->save();
+    }
+
+    private function Nomenclature($node){
+
+
+
+        $distance = round(sqrt(pow($node->x,2) + pow($node->y,2)),2);
+
+
+        if($node->x != 0 && $node->y != 0) {
+            $angle = round(atan($node->x/$node->y),2);
+        }
+        else { $angle = 0;}
+
+
+        if(0 < $node->x && 0 < $node->y){
+            $angle += 6.14;
+        }
+        if(0 > $node->x && 0 < $node->y){
+            $angle += 6.14;
+        }
+        if(0 < $node->x && 0 > $node->y){
+            $angle += 6.14;
+        }
+
+        $nom = $this->nomenclature_types[$node->type][random_int(0,2)];
+
+        $node->nomenclature = $nom . '-' . $distance . '/' . $angle;
 
     }
 
@@ -134,7 +174,17 @@ class NodeService{
             $new_node->y = $node_way[1];
             $new_node->links = random_int(0,2);
             $new_node->char_id = $char->id;
-            $new_node->type = random_int(0,5);
+
+            $rnd = random_int(0,100);
+            if($rnd > 98) { $new_node->type = 2; }
+            else if($rnd > 95) { $new_node->type = 3; }
+            else if($rnd > 70) { $new_node->type = 1; }
+            else{
+               $new_node->type = 0;
+            }
+
+            $this->Nomenclature($new_node);
+
             $new_node->save();
 
             // reduce link potential
