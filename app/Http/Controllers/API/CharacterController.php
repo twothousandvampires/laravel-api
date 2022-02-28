@@ -30,21 +30,21 @@ class CharacterController extends BaseController
                 $char->y = 0;
                 $char->save();
                 $this->node_service->generateSingleNode(0,0,4,$char->id);
-                return $this->sendResponse($char, 'Product retrieved successfully.');
+                return $this->sendResponse($char, 'Successfully.');
             }
             catch(\Exception $e){
 
             }
         }
         else{
-            return $this->sendResponse('her', 'Product retrieved successfully.');
+            return $this->sendResponse('her', 'Successfully.');
         }
     }
     public function world($user_id,$char_id){
         if(Auth::user()->id == $user_id){
             $char = Character::find($char_id);
             $nodes = $this->node_service->generateNodes($char);
-            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0], 'Product retrieved successfully.');
+            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0], 'Successfully.');
         }
     }
 
@@ -63,11 +63,11 @@ class CharacterController extends BaseController
                     $new_node->visited = 1;
                     $new_node->save();
                     $nodes = $this->node_service->generateNodes($char);
-                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Product retrieved successfully.');
+                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
                 case 1:
-                    return $this->sendResponse([random_int(5,10),random_int(5,10),1], 'Product retrieved successfully.');
+                    $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
+                    return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
             }
-
         }
     }
 }
