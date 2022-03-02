@@ -25,10 +25,11 @@ Route::post('login', [RegisterController::class, 'login']);
 
 Route::middleware('auth:api')->group( function () {
     Route::post('logout', [RegisterController::class, 'logout']);
-    Route::post('character/create/{user_id}', [CharacterController::class, 'create']);
+    Route::post('character/create/', [CharacterController::class, 'create']);
     Route::resource('user' ,UserController::class )->middleware('cors');
-    Route::post('character/world/{user_id}/{char_id}',[CharacterController::class, 'world']);
-    Route::post('character/move/{user_id}/{char_id}',[CharacterController::class, 'move']);
+    Route::post('character/world/',[CharacterController::class, 'world']);
+    Route::post('character/move/',[CharacterController::class, 'move']);
+    Route::post('character/delete/',[CharacterController::class, 'delete']);
 });
 
 //Route::middleware('auth:api')->get('/user', function (Request $request) {
