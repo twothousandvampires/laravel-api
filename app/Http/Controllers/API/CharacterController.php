@@ -75,6 +75,9 @@ class CharacterController extends BaseController
                     $nodes = $this->node_service->generateNodes($char);
                     return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
                 case 1:
+                    $char->x = $request->x;
+                    $char->y = $request->y;
+                    $char->save();
                     $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
                     return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
             }
