@@ -46,7 +46,7 @@ class CharacterController extends BaseController
         if($this->isOwner($request->user_id)){
             $char = Character::find($request->char_id);
             $nodes = $this->node_service->generateNodes($char);
-            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0], 'Successfully.');
+            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
         }
     }
     public function delete(Request $request){

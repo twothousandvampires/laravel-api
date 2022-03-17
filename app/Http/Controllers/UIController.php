@@ -2,25 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Node;
+
 
 class UIController extends Controller
 {
     public function __construct(){
 
         $this->node_service = new NodeService();
-
+        $this->item_service = new ItemService();
     }
 
     public function index(){
 
-        $char = Character::find(81);
+        $char = Character::find(99);
 
         $nodes = $this->node_service->generateNodes($char);
 
+
+        var_dump($this->item_service->createRandomWeapon()->name);
 
         return view('ui',['data'=>$nodes]);
     }
