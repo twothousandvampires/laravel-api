@@ -8,6 +8,8 @@ class Character extends Model
 {
     use HasFactory;
 
+    private $max_inv = 20;
+
     public $timestamps = false;
     /**
      * The attributes that are mass assignable.
@@ -17,5 +19,12 @@ class Character extends Model
     protected $fillable = [
         'name', 'detail','user_id'
     ];
+
+    static function getFreeInvSlots($char_id){
+        $free = [];
+        $weapon = Weapon::where('char_id',$char_id)->
+                whereNotNull('inv_slot')->get()->pluck('inv_slot')->toArray();
+        return array_merge($free, $weapon);
+    }
 
 }
