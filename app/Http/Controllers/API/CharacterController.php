@@ -2,6 +2,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\API\BaseController;
+use App\Http\Services\CharacterService;
+use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -13,14 +15,20 @@ class CharacterController extends BaseController
 {
 
     public $node_service;
+    public $item_service;
+    private $character_service;
+
+    function __construct()
+    {
+        $this->node_service = new NodeService();
+        $this->item_service = new ItemService();
+        $this->character_service = new CharacterService();
+    }
 
     private function isOwner($user_id){
         return Auth::user()->id == $user_id;
     }
 
-    function __construct(){
-        $this->node_service = new NodeService();
-    }
     public function create(Request $request){
         if($this->isOwner($request->user_id)){
             try{
@@ -32,6 +40,11 @@ class CharacterController extends BaseController
                 $char->y = 0;
                 $char->save();
                 $this->node_service->generateSingleNode(0,0,4,$char->id);
+
+                $this->item_service->createRandomWeapon($char->id);
+                $this->item_service->createRandomWeapon($char->id);
+                $this->item_service->createRandomWeapon($char->id);
+
                 return $this->sendResponse($char, 'Successfully.');
             }
             catch(\Exception $e){
@@ -44,9 +57,9 @@ class CharacterController extends BaseController
     }
     public function world(Request $request){
         if($this->isOwner($request->user_id)){
-            $char = Character::find($request->char_id);
-            $nodes = $this->node_service->generateNodes($char);
-            return $this->sendResponse(['nodes' => $nodes, 'char' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
+            $char = $this->character_service->componateCharacter($request->char_id);
+            $nodes = $this->node_service->generateNodes($char['character']);
+            return $this->sendResponse(['nodes' => $nodes, 'character' => $char, 'node_type'=>0, 'char_update'=>true], 'Successfully.');
         }
     }
     public function delete(Request $request){
