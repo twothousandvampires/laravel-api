@@ -5,7 +5,6 @@ use App\Http\Controllers\API\BaseController;
 use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Character;

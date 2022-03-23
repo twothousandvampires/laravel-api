@@ -19,10 +19,11 @@ class UIController extends Controller
 
     public function index(){
 
-        $char = Character::find(100);
+        $char = Character::find(103);
 
         $nodes = $this->node_service->generateNodes($char);
 
+        var_dump(Character::getFreeInvSlots(103));die;
 
         $this->item_service->createRandomWeapon();
 

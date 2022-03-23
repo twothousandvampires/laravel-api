@@ -4,9 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\RegisterController;
-use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CharacterController;
+use App\Http\Controllers\API\ItemController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +30,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('character/world/',[CharacterController::class, 'world']);
     Route::post('character/move/',[CharacterController::class, 'move']);
     Route::post('character/delete/',[CharacterController::class, 'delete']);
+    Route::post('item/change/',[ItemController::class, 'change']);
 });
 
 //Route::middleware('auth:api')->get('/user', function (Request $request) {
