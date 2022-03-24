@@ -23,7 +23,7 @@ class UIController extends Controller
 
         $nodes = $this->node_service->generateNodes($char);
 
-        var_dump(Character::getFreeInvSlots(103));die;
+        var_dump($this->item_service->createRandomArmour($char->id));die;
 
         $this->item_service->createRandomWeapon();
 

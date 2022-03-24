@@ -1,16 +1,16 @@
 <?php
 
 namespace App\Http\Services;
-use App\Models\Character;
-use App\Models\WeaponList;
+use App\Models\Armour;
 use App\Models\Weapon;
-use App\Models\WeaponPropertylist;
+
 
 class InventoryService{
 
     public function createInventory($char_id){
-        $items = Weapon::where('char_id', $char_id)->get();
-        return [$items];
+        $weapon = Weapon::where('char_id', $char_id)->get()->toArray();
+        $armour = Armour::where('char_id', $char_id)->get()->toArray();
+        return array_merge($weapon,$armour);
     }
 
 }
