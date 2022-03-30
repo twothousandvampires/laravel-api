@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
+use App\Http\Services\InventoryService;
 use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Node;
@@ -14,24 +15,16 @@ class UIController extends Controller
 
         $this->node_service = new NodeService();
         $this->item_service = new ItemService();
+        $this->inv_service = new InventoryService();
     }
 
     public function index(){
 
-        function z($n,$a,$b,$c){return"z$n"[-2]==1||($n="$n"[-1])>4|!$n?$c:($n<2?$a:$b);}
-        for($i = -25; $i < 125;$i++){
-            echo z($i,'рубль','рубля','рублей');
-            echo '<br>';
-        }
 
-        die;
-        $char = Character::find(103);
+        $char = Character::find(109);
 
-        $nodes = $this->node_service->generateNodes($char);
 
-        var_dump($this->item_service->createRandomArmour($char->id));die;
-
-        $this->item_service->createRandomWeapon();
+        var_dump($this->inv_service->getFreeSlots(109));die;
 
         return view('ui',['data'=>$nodes]);
     }

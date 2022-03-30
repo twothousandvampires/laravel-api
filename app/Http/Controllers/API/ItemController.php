@@ -5,6 +5,7 @@ use App\Http\Controllers\API\BaseController;
 use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
+use App\Models\Armour;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
 
@@ -23,22 +24,62 @@ class ItemController extends BaseController
 
 
     public function change(Request $request){
-       function z($n,$a,$b,$c){return$n[-2]==1||($n=$n[-1])>4|!$n?$c:($n<2?$a:$b);}
-        echo z(142,'рубль','рубля','рублей');
 
 
-        switch ($request->type){
+        switch ($request->which_type){
             case  'weapon':
-                $item = Weapon::find($request->item_id);
+                $which = Weapon::find($request->which_id);
                 break;
         }
 
-        $item->inv_slot = $request->inv_slot;
-        $item->save();
+        if($request->for_what_id){
+            switch ($request->for_what_type){
+                case  'weapon':
+                    $for_what = Weapon::find($request->for_what_id);
+                    break;
+            }
 
-        $char = $this->character_service->componateCharacter($request->char_id);
-        $nodes = $this->node_service->generateNodes($char['character']);
-        return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
+            $temp_slot = $which->slot;
+            $temp_slot_type = $which->slot_type;
+
+            $which->slot = $for_what->slot;
+            $which->slot_type = $for_what->slot_type;
+            $which->save();
+
+            $for_what->slot = $temp_slot;
+            $for_what->slot_type = $temp_slot_type;
+            $for_what->save();
+        }
+        else{
+            $which->slot = $request->slot;
+            $which->slot_type = $request->slot_type;
+            $which->save();
+        }
+
+        return $this->sendResponse(['which' => $which,'for_what' => $for_what ?? null], 'Successfully.');
+    }
+
+    public function create(Request $request){
+
+        $item = $this->item_service->createRandomItem($request->char_id);
+        return $this->sendResponse(['item' => $item], 'Successfully.');
+
+    }
+
+    public function delete(Request $request){
+
+        switch ($request->type){
+            case 'weapon':
+                $item = Weapon::find($request->id);
+                $item->delete();
+                break;
+            case 'armour':
+                $item = Armour::find($request->id);
+                $item->delete();
+                break;
+        }
+
+        return $this->sendResponse([], 'Successfully.');
     }
 
 }
