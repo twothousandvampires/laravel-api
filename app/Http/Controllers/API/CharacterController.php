@@ -44,9 +44,9 @@ class CharacterController extends BaseController
                 $this->item_service->createRandomWeapon($char->id);
                 $this->item_service->createRandomWeapon($char->id);
 
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
 
                 return $this->sendResponse($char, 'Successfully.');
             }
