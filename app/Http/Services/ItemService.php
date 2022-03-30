@@ -1,13 +1,22 @@
 <?php
 
 namespace App\Http\Services;
+use App\Http\Services\InventoryService;
 use App\Models\ArmourList;
+use App\Models\ArmourProprtyList;
 use App\Models\WeaponList;
 use App\Models\Weapon;
 use App\Models\Armour;
 use App\Models\WeaponPropertylist;
 
 class ItemService{
+
+    public $inv_service;
+
+    function __construct()
+    {
+        $this->inv_service = new InventoryService();
+    }
 
     public function createRandomWeapon($char_id = false){
         $base = WeaponList::inRandomOrder()->limit(1)->get()->first();
@@ -38,6 +47,8 @@ class ItemService{
             $weapon->char_id = $char_id;
         }
         $weapon->property_1 = $prop_body;
+        $weapon->slot_type = 'inv';
+        $weapon->slot = min($this->inv_service->getFreeSlots($char_id));
         $weapon->save();
 
         return $weapon;
@@ -45,7 +56,7 @@ class ItemService{
 
     public function createRandomArmour($char_id = false){
         $base = ArmourList::inRandomOrder()->limit(1)->get()->first();
-        $prop = WeaponPropertylist::inRandomOrder()->limit(1)->get()->first();
+        $prop = ArmourProprtyList::inRandomOrder()->limit(1)->get()->first();
 
         $prop_body = $prop->type . ';';
         $prop_body .= $prop->inc_type . ';';
@@ -71,9 +82,25 @@ class ItemService{
             $armour->char_id = $char_id;
         }
         $armour->property_1 = $prop_body;
+        $armour->slot_type = 'inv';
+        $armour->slot = min($this->inv_service->getFreeSlots($char_id));
         $armour->save();
 
+
         return $armour;
+    }
+
+    public function createRandomItem($char_id = false){
+
+        $r = random_int(0,1);
+
+        if($r){
+            return $this->createRandomArmour($char_id);
+        }
+        else{
+            return $this->createRandomWeapon($char_id);
+        }
+
     }
 
 }

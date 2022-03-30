@@ -40,7 +40,6 @@ class ItemController extends BaseController
             $temp_slot = $which->slot;
             $temp_slot_type = $which->slot_type;
 
-
             $which->slot = $for_what->slot;
             $which->slot_type = $for_what->slot_type;
             $which->save();
@@ -56,6 +55,12 @@ class ItemController extends BaseController
         }
 
         return $this->sendResponse(['which' => $which,'for_what' => $for_what ?? null], 'Successfully.');
+    }
+
+    public function create(Request $request){
+
+        $item = $this->item_service->createRandomItem($request->char_id);
+        return $this->sendResponse(['item' => $item], 'Successfully.');
     }
 
 }

@@ -31,6 +31,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('character/move/',[CharacterController::class, 'move']);
     Route::post('character/delete/',[CharacterController::class, 'delete']);
     Route::post('item/change/',[ItemController::class, 'change']);
+    Route::post('item/create/',[ItemController::class, 'create']);
 });
 
 //Route::middleware('auth:api')->get('/user', function (Request $request) {
