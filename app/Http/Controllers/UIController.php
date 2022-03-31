@@ -23,7 +23,7 @@ class UIController extends Controller
 
         $char = Character::find(109);
 
-        var_dump($this->inv_service->getFreeSlots(109));die;
+        var_dump($this->item_service->createRandomWeapon());die;
 
         return view('ui',['data'=>$nodes]);
     }
