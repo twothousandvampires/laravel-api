@@ -44,9 +44,9 @@ class CharacterController extends BaseController
                 $this->item_service->createRandomWeapon($char->id);
                 $this->item_service->createRandomWeapon($char->id);
 
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
+                $this->item_service->createRandomArmour($char->id);
 
                 return $this->sendResponse($char, 'Successfully.');
             }
@@ -62,7 +62,9 @@ class CharacterController extends BaseController
         if($this->isOwner($request->user_id)){
             $char = $this->character_service->componateCharacter($request->char_id);
             $nodes = $this->node_service->generateNodes($char['character']);
+
             return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
+
         }
     }
     public function delete(Request $request){

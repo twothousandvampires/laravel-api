@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Services;
+
 use App\Http\Services\InventoryService;
 use App\Models\ArmourList;
 use App\Models\ArmourProprtyList;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemService{
 
+
     public $inv_service;
 
     function __construct()
@@ -19,7 +21,9 @@ class ItemService{
         $this->inv_service = new InventoryService();
     }
 
+
     public function createRandomWeapon($char_id = false){
+
         $base = WeaponList::inRandomOrder()->limit(1)->get()->first();
         $props = WeaponPropertylist::inRandomOrder()->limit(4)->get();
         $weapon = new Weapon();
@@ -54,6 +58,7 @@ class ItemService{
         $weapon->slot_type = 'inv';
         $weapon->slot = min($this->inv_service->getFreeSlots($char_id));
         $weapon->save();
+
 
         return $weapon;
     }

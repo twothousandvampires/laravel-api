@@ -5,6 +5,7 @@ use App\Http\Controllers\API\BaseController;
 use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
+use App\Models\Armour;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
 
@@ -23,6 +24,7 @@ class ItemController extends BaseController
 
 
     public function change(Request $request){
+
 
         switch ($request->which_type){
             case  'weapon':
@@ -61,6 +63,23 @@ class ItemController extends BaseController
 
         $item = $this->item_service->createRandomItem($request->char_id);
         return $this->sendResponse(['item' => $item], 'Successfully.');
+
+    }
+
+    public function delete(Request $request){
+
+        switch ($request->type){
+            case 'weapon':
+                $item = Weapon::find($request->id);
+                $item->delete();
+                break;
+            case 'armour':
+                $item = Armour::find($request->id);
+                $item->delete();
+                break;
+        }
+
+        return $this->sendResponse([], 'Successfully.');
     }
 
 }

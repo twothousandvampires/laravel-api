@@ -9,7 +9,6 @@ use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Node;
 
-
 class UIController extends Controller
 {
     public function __construct(){
@@ -21,9 +20,14 @@ class UIController extends Controller
 
     public function index(){
 
+
         $char = Character::find(109);
 
         var_dump($this->item_service->createRandomWeapon());die;
+
+
+        var_dump($this->inv_service->getFreeSlots(109));die;
+
 
         return view('ui',['data'=>$nodes]);
     }

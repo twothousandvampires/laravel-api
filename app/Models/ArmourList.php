@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArmourList extends Model
 {
+
     use HasFactory;
 
     protected $table = 'armours_list';
+
 }
