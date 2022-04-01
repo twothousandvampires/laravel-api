@@ -4,11 +4,10 @@ namespace App\Http\Services;
 
 use App\Http\Services\InventoryService;
 use App\Models\ArmourList;
-use App\Models\ArmourProprtyList;
 use App\Models\WeaponList;
 use App\Models\Weapon;
 use App\Models\Armour;
-use App\Models\WeaponPropertylist;
+use App\Models\Propertylist;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemService{
@@ -25,24 +24,35 @@ class ItemService{
     public function createRandomWeapon($char_id = false){
 
         $base = WeaponList::inRandomOrder()->limit(1)->get()->first();
-        $props = WeaponPropertylist::inRandomOrder()->limit(4)->get();
+        $props = Propertylist::
+                                where('item_type','like', '%' . $base->type . '%')->
+                                orWhere('item_class','like', '%' . $base->class . '%')->
+                                orWhere('item_name' ,'like', '%' . $base->name . '%' )->
+                                inRandomOrder()->
+                                limit(3)->
+                                get();
+
+
+
         $weapon = new Weapon();
 
-        for($i = 1; $i < 5; $i++) {
-            $prop = $props[$i-1];
-            $prop_body = $prop->type . ';';
-            $prop_body .= $prop->inc_type . ';';
-            $prop_body .= $prop->name . ';';
+        if(count($props)) {
+            for ($i = 1; $i < count($props); $i++) {
+                $prop = $props[$i - 1];
+                $prop_body = $prop->type . ';';
+                $prop_body .= $prop->inc_type . ';';
+                $prop_body .= $prop->name . ';';
 
-            if ($prop->inc_type === 'between') {
-                $prop_body .= $prop->min_value . '/';
-                $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
-            } else {
-                $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
+                if ($prop->inc_type === 'between') {
+                    $prop_body .= $prop->min_value . '/';
+                    $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
+                } else {
+                    $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
+                }
+                $weapon->{'property_' . $i} = $prop_body;
             }
-            $weapon->{'property_'.$i} = $prop_body;
-        }
 
+        }
         $weapon->name = $base->name;
         $weapon->type = 'weapon';
         $weapon->min_damage = $base->min_damage;
