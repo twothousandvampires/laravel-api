@@ -23,10 +23,7 @@ class UIController extends Controller
 
         $char = Character::find(109);
 
-        var_dump($this->item_service->createRandomWeapon());die;
-
-
-        var_dump($this->inv_service->getFreeSlots(109));die;
+        $nodes = $this->node_service->generateNodes($char);
 
 
         return view('ui',['data'=>$nodes]);
@@ -34,7 +31,7 @@ class UIController extends Controller
 
     public function move($direction){
 
-        $char = Character::find(81);
+        $char = Character::find(109);
 
         switch ($direction){
             case 0;

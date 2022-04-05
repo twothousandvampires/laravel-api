@@ -41,7 +41,14 @@
         let ctx = canvas.getContext('2d')
         ctx.clearRect(0,0,1000,1000)
         data.forEach(elem => {
-            ctx.fillRect(elem.x + 300 + (elem.x * 40), elem.y + 300 + (elem.y * 40),20,20)
+            ctx.fillStyle = 'black'
+            if(elem.visited){
+                ctx.fillStyle = 'yellow'
+                ctx.fillRect(elem.x + 300 + (elem.x * 40), elem.y + 300 + (elem.y * 40),20,20)
+            }
+            else {
+                ctx.fillRect(elem.x + 300 + (elem.x * 40), elem.y + 300 + (elem.y * 40),20,20)
+            }
         })
     </script>
 </html>

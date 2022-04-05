@@ -25,6 +25,7 @@ class CharacterController extends BaseController
     }
 
     private function isOwner($user_id){
+        return  true;
         return Auth::user()->id == $user_id;
     }
 
@@ -38,25 +39,27 @@ class CharacterController extends BaseController
                 $char->x = 0;
                 $char->y = 0;
                 $char->save();
+
                 $this->node_service->generateSingleNode(0,0,4,$char->id);
 
-                $this->item_service->createRandomWeapon($char->id);
-                $this->item_service->createRandomWeapon($char->id);
-                $this->item_service->createRandomWeapon($char->id);
-
-                $this->item_service->createRandomArmour($char->id);
-                $this->item_service->createRandomArmour($char->id);
-                $this->item_service->createRandomArmour($char->id);
+//                $this->item_service->createRandomWeapon($char->id);
+//                $this->item_service->createRandomWeapon($char->id);
+//                $this->item_service->createRandomWeapon($char->id);
+//
+//                $this->item_service->createRandomArmour($char->id);
+//                $this->item_service->createRandomArmour($char->id);
+//                $this->item_service->createRandomArmour($char->id);
 
                 return $this->sendResponse($char, 'Successfully.');
             }
             catch(\Exception $e){
-
+                return $e;
             }
         }
         else{
             return $this->sendResponse('her', 'Successfully.');
         }
+
     }
     public function world(Request $request){
         if($this->isOwner($request->user_id)){

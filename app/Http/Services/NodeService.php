@@ -66,25 +66,18 @@ class NodeService{
         $node->links = $links;
         $node->char_id = $char_id;
         $node->type = 4;
-        $this->Nomenclature($node);
-        $node->image_offset_x = round(random_int(-50,50)/100,2);
-        $node->image_offset_y = round(random_int(-50,50)/100,2);
-        $node->solar_system_image = 'system_' . random_int(1,2);
+        $node->visited = 1;
         $node->save();
     }
 
     private function Nomenclature($node){
 
-
-
         $distance = round(sqrt(pow($node->x,2) + pow($node->y,2)),2);
-
 
         if($node->x != 0 && $node->y != 0) {
             $angle = round(atan($node->x/$node->y),2);
         }
         else { $angle = 0;}
-
 
         if(0 < $node->x && 0 < $node->y){
             $angle += 6.14;
@@ -114,21 +107,28 @@ class NodeService{
             // get the random node
             $parent = $nodes_to_link->random();
 
+            if($parent->links <= 0){
+                $nodes_to_link = $nodes_to_link->filter(function ($value, $key) use ($parent) {
+                    return $value != $parent;
+                });
+                continue;
+            }
+
             // define the ways array
             $ways = [];
 
             // check north, south, east, west nodes for existence
             if(!$this->checkNode($parent->x + 1,$parent->y, $all)){
-                $ways[] = [$parent->x + 1,$parent->y];
+                $ways[] = [$parent->x + 1,$parent->y, 'e_link','w_link'];
             }
             if(!$this->checkNode($parent->x - 1,$parent->y,$all)){
-                $ways[] = [$parent->x - 1,$parent->y];
+                $ways[] = [$parent->x - 1,$parent->y , 'w_link','e_link'];
             }
             if(!$this->checkNode($parent->x,$parent->y - 1,$all)){
-                $ways[] = [$parent->x,$parent->y - 1];
+                $ways[] = [$parent->x,$parent->y - 1 ,'n_link','s_link'];
             }
             if(!$this->checkNode($parent->x,$parent->y + 1,$all)){
-                $ways[] = [$parent->x,$parent->y+ 1];
+                $ways[] = [$parent->x,$parent->y+ 1 ,'s_link','n_link'];
             }
 
             // check space for direction node
@@ -175,23 +175,14 @@ class NodeService{
 
             $new_node->x = $node_way[0];
             $new_node->y = $node_way[1];
-            $new_node->links = random_int(0,2);
+            $new_node->links = random_int(1,4);
+            $new_node->{$node_way[3]} = 1;
+            $parent->{$node_way[2]} = 1;
             $new_node->char_id = $char->id;
 
-            $rnd = random_int(0,100);
-            if($rnd > 98) { $new_node->type = 2; }
-            else if($rnd > 95) { $new_node->type = 3; }
-            else if($rnd > 90) { $new_node->type = 1; }
-            else{
-               $new_node->type = 0;
-            }
 
-            $new_node->image_offset_x = round(random_int(-50,50)/10,2);
-            $new_node->image_offset_y = round(random_int(-50,50)/10,2);
+            $new_node->type = 0;
 
-            $new_node->solar_system_image = 'system_' . random_int(1,2);
-
-            $this->Nomenclature($new_node);
 
             $new_node->save();
 
@@ -200,17 +191,21 @@ class NodeService{
             $parent->save();
 
             // if node cannot link, remove them
-            if($parent->links == 0){
-                $nodes_to_link = $nodes_to_link->filter(function ($value, $key) use ($parent) {
-                    return $value != $parent;
-                });
-            }
+
 
             // push
             $nodes_to_link->push($new_node);
             $all->push($new_node);
         }
 
-        return Node::getNodes($char->x,$char->y,$char->id,4)->toArray();
+        for($i = 0;$i < $all->count();$i++){
+            if ( abs($char->x - $all[$i]->x) <=1 && abs($char->y - $all[$i]->y) <= 1 && !$all[$i]->visited){
+                $all[$i]->visited = 1;
+                $all[$i]->save();
+            }
+        }
+
+
+        return $all->toArray();
     }
 }
