@@ -9,6 +9,9 @@ class NodeService{
      * @var \string[][]
      */
     private $nomenclature_types;
+    protected $enemy_types = [
+        'undying'
+    ];
 
     function __construct(){
         $this->nomenclature_types = [
@@ -68,31 +71,6 @@ class NodeService{
         $node->type = 4;
         $node->visited = 1;
         $node->save();
-    }
-
-    private function Nomenclature($node){
-
-        $distance = round(sqrt(pow($node->x,2) + pow($node->y,2)),2);
-
-        if($node->x != 0 && $node->y != 0) {
-            $angle = round(atan($node->x/$node->y),2);
-        }
-        else { $angle = 0;}
-
-        if(0 < $node->x && 0 < $node->y){
-            $angle += 6.14;
-        }
-        if(0 > $node->x && 0 < $node->y){
-            $angle += 6.14;
-        }
-        if(0 < $node->x && 0 > $node->y){
-            $angle += 6.14;
-        }
-
-        $nom = $this->nomenclature_types[$node->type][random_int(0,2)];
-
-        $node->nomenclature = $nom . '-' . $distance . '/' . $angle;
-
     }
 
     public function generateNodes($char){
@@ -166,7 +144,6 @@ class NodeService{
                 continue;
             }
 
-
             // create node Model
             $new_node = new Node();
 
@@ -180,9 +157,18 @@ class NodeService{
             $parent->{$node_way[2]} = 1;
             $new_node->char_id = $char->id;
 
+            $type = random_int(0,100);
 
-            $new_node->type = 0;
+            if($type >= 90){
+                $new_node->type = 1;
+                $new_node->enemy_type = $this->enemy_types[0];
+                $new_node->enemy_count = random_int(10,15);
+                $new_node->content_img = 'undying_squad';
+            }
 
+            else{
+                $new_node->type = 0;
+            }
 
             $new_node->save();
 

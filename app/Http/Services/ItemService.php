@@ -20,7 +20,6 @@ class ItemService{
         $this->inv_service = new InventoryService();
     }
 
-
     public function createRandomWeapon($char_id = false){
 
         $base = WeaponList::inRandomOrder()->limit(1)->get()->first();
@@ -31,8 +30,6 @@ class ItemService{
                                 inRandomOrder()->
                                 limit(3)->
                                 get();
-
-
 
         $weapon = new Weapon();
 

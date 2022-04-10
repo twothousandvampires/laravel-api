@@ -63,10 +63,15 @@ class CharacterController extends BaseController
     }
     public function world(Request $request){
         if($this->isOwner($request->user_id)){
-            $char = $this->character_service->componateCharacter($request->char_id);
-            $nodes = $this->node_service->generateNodes($char['character']);
+            try{
+                $char = $this->character_service->componateCharacter($request->char_id);
+                $nodes = $this->node_service->generateNodes($char['character']);
+                return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
+            }
+            catch (\Exception $e){
+                return $e;
+            }
 
-            return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
 
         }
     }
@@ -84,23 +89,29 @@ class CharacterController extends BaseController
     }
     public function move(Request $request){
         if($this->isOwner($request->user_id)){
-            $new_node = Node::getNodeByCoord($request->x,$request->y,$request->char_id);
-            $char = Character::find($request->char_id);
-            switch ($new_node->type){
-                case 0:
-                    $char->x = $request->x;
-                    $char->y = $request->y;
-                    $char->save();
-                    $new_node->visited = 1;
-                    $new_node->save();
-                    $nodes = $this->node_service->generateNodes($char);
-                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
-                case 1:
-                    $char->x = $request->x;
-                    $char->y = $request->y;
-                    $char->save();
-                    $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
-                    return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
+            try{
+                $new_node = Node::getNodeByCoord($request->x,$request->y,$request->char_id);
+                $char = Character::find($request->char_id);
+                switch ($new_node->type){
+                    case 0:
+                        $char->x = $request->x;
+                        $char->y = $request->y;
+                        $char->save();
+                        $new_node->visited = 1;
+                        $new_node->save();
+                        $nodes = $this->node_service->generateNodes($char);
+                        return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
+                    case 1:
+                        $char->x = $request->x;
+                        $char->y = $request->y;
+                        $char->save();
+                        $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
+                        return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
+                }
+
+            }
+            catch (\Exception $e){
+                return $e;
             }
         }
     }
