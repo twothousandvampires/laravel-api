@@ -163,7 +163,7 @@ class NodeService{
                 $new_node->type = 1;
                 $new_node->enemy_type = $this->enemy_types[0];
                 $new_node->enemy_count = random_int(10,15);
-                $new_node->content_img = 'undying_squad';
+                $new_node->content_img = 'undying squad';
             }
 
             else{
