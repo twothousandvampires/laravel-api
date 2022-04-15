@@ -115,4 +115,20 @@ class CharacterController extends BaseController
             }
         }
     }
+
+    public function win(Request $request){
+        if($this->isOwner($request->user_id)){
+            try{
+                $char = Character::find($request->char_id);
+                $node = Node::getNodeByCoord($char->x,$char->y,$char->id);
+                $node->type = 0;
+                $node->save();
+                $nodes = $this->node_service->generateNodes($char);
+                return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
+            }
+            catch (\Exception $e){
+                return $e;
+            }
+        }
+    }
 }

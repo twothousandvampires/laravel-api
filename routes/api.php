@@ -28,6 +28,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('character/create/', [CharacterController::class, 'create']);
     Route::resource('user' ,UserController::class )->middleware('cors');
     Route::post('character/world/',[CharacterController::class, 'world']);
+    Route::post('character/win/',[CharacterController::class, 'win']);
     Route::post('character/move/',[CharacterController::class, 'move']);
     Route::post('character/delete/',[CharacterController::class, 'delete']);
     Route::post('item/change/',[ItemController::class, 'change']);
