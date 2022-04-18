@@ -8,6 +8,7 @@ use App\Http\Services\NodeService;
 use App\Models\Armour;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
+use App\Models\Used;
 
 class ItemController extends BaseController
 {
@@ -75,6 +76,10 @@ class ItemController extends BaseController
                 break;
             case 'armour':
                 $item = Armour::find($request->id);
+                $item->delete();
+                break;
+            case 'used':
+                $item = Used::find($request->id);
                 $item->delete();
                 break;
         }

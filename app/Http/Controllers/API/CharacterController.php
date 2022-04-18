@@ -61,6 +61,7 @@ class CharacterController extends BaseController
         }
 
     }
+
     public function world(Request $request){
         if($this->isOwner($request->user_id)){
             try{
@@ -75,6 +76,7 @@ class CharacterController extends BaseController
 
         }
     }
+
     public function delete(Request $request){
         if($this->isOwner($request->user_id)){
             $char = Character::find($request->char_id);
@@ -87,6 +89,7 @@ class CharacterController extends BaseController
             }
         }
     }
+
     public function move(Request $request){
         if($this->isOwner($request->user_id)){
             try{

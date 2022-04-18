@@ -4,6 +4,8 @@ namespace App\Http\Services;
 
 use App\Http\Services\InventoryService;
 use App\Models\ArmourList;
+use App\Models\Used;
+use App\Models\UsedList;
 use App\Models\WeaponList;
 use App\Models\Weapon;
 use App\Models\Armour;
@@ -72,7 +74,13 @@ class ItemService{
 
     public function createRandomArmour($char_id = false){
         $base = ArmourList::inRandomOrder()->limit(1)->get()->first();
-        $prop = ArmourProprtyList::inRandomOrder()->limit(1)->get()->first();
+        $prop = Propertylist::
+                            where('item_type','like', '%' . $base->type . '%')->
+                            orWhere('item_class','like', '%' . $base->class . '%')->
+                            orWhere('item_name' ,'like', '%' . $base->name . '%' )->
+                            inRandomOrder()->
+                            limit(1)->
+                            get();
 
         $prop_body = $prop->type . ';';
         $prop_body .= $prop->inc_type . ';';
@@ -105,19 +113,41 @@ class ItemService{
         return $armour;
     }
 
+    public function createRandomUsed($char_id = false){
+
+        $base = UsedList::inRandomOrder()->limit(1)->get()->first();
+
+        $used = new Used();
+        $used->name = $base->name;
+        $used->type = $base->type;
+        $used->class = $base->class;
+        $used->value = $base->value;
+        $used->affect = $base->affect;
+        $used->img_path = $base->img_path;
+        if($char_id){
+            $used->char_id = $char_id;
+        }
+        $used->slot_type = 'inv';
+        $used->slot = min($this->inv_service->getFreeSlots($char_id));
+        $used->save();
+
+
+        return $used;
+    }
+
     public function createRandomItem($char_id = false){
 
-        $r = random_int(0,1);
+        $r = random_int(0,100);
 
-//        if($r){
-//            return $this->createRandomArmour($char_id);
+//        if($r > 33){
+////            return $this->createRandomArmour($char_id);
 //        }
-//        else{
-//            return $this->createRandomWeapon($char_id);
-//        }
-
-        return $this->createRandomWeapon($char_id);
-
+        if($r > 50){
+            return $this->createRandomWeapon($char_id);
+        }
+        else{
+            return $this->createRandomUsed($char_id);
+        }
     }
 
 }

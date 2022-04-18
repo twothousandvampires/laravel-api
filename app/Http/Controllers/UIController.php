@@ -21,12 +21,10 @@ class UIController extends Controller
     public function index(){
 
 
-        $char = Character::find(109);
-
-        $nodes = $this->node_service->generateNodes($char);
+        var_dump($this->item_service->createRandomItem());
 
 
-        return view('ui',['data'=>$nodes]);
+//        return view('ui',['data'=>$nodes]);
     }
 
     public function move($direction){
