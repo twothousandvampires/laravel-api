@@ -39,19 +39,16 @@ class ItemService{
             for ($i = 1; $i < count($props); $i++) {
                 $prop = $props[$i - 1];
                 $prop_body = $prop->type . ';';
-                $prop_body .= $prop->inc_type . ';';
                 $prop_body .= $prop->name . ';';
+                $prop_body .= random_int($prop->min_value, $prop->max_value);
 
-                if ($prop->inc_type === 'between') {
-                    $prop_body .= $prop->min_value . '/';
-                    $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
-                } else {
-                    $prop_body .= random_int($prop->min_value, $prop->max_value) . ';';
-                }
                 $weapon->{'property_' . $i} = $prop_body;
             }
 
         }
+
+        $weapon->property_base = 'base;' .  $base->base_property_name . ';' .random_int($base->base_property_min_value, $base->base_property_max_value);
+
         $weapon->name = $base->name;
         $weapon->type = 'weapon';
         $weapon->min_damage = $base->min_damage;
@@ -80,13 +77,13 @@ class ItemService{
                             orWhere('item_name' ,'like', '%' . $base->name . '%' )->
                             inRandomOrder()->
                             limit(1)->
-                            get();
+                            get()->first();
 
         $prop_body = $prop->type . ';';
-        $prop_body .= $prop->inc_type . ';';
+        $prop_body .= $prop->value_type . ';';
         $prop_body .= $prop->name . ';';
 
-        if($prop->inc_type === 'between'){
+        if($prop->value_type === 'range'){
             $prop_body .= $prop->min_value . '/';
             $prop_body .= random_int($prop->min_value, $prop->max_value ) . ';';
         }
@@ -140,7 +137,7 @@ class ItemService{
         $r = random_int(0,100);
 
 //        if($r > 33){
-////            return $this->createRandomArmour($char_id);
+//            return $this->createRandomArmour($char_id);
 //        }
         if($r > 50){
             return $this->createRandomWeapon($char_id);
