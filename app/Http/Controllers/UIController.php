@@ -8,6 +8,7 @@ use App\Http\Services\InventoryService;
 use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Node;
+use App\Models\SkillTreeModel;
 
 class UIController extends Controller
 {
@@ -21,10 +22,9 @@ class UIController extends Controller
     public function index(){
 
 
-        var_dump($this->item_service->createRandomItem());
 
+        var_dump(SkillTreeModel::where('char_id',138)->get()->first()->body);
 
-//        return view('ui',['data'=>$nodes]);
     }
 
     public function move($direction){

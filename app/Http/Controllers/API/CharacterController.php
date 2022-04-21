@@ -5,10 +5,12 @@ use App\Http\Controllers\API\BaseController;
 use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
+use App\Models\SkillTreeModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Character;
 use App\Models\Node;
+use App\Models\SkillTree;
 
 class CharacterController extends BaseController
 {
@@ -39,16 +41,8 @@ class CharacterController extends BaseController
                 $char->x = 0;
                 $char->y = 0;
                 $char->save();
-
+                SkillTreeModel::make($char->id);
                 $this->node_service->generateSingleNode(0,0,4,$char->id);
-
-//                $this->item_service->createRandomWeapon($char->id);
-//                $this->item_service->createRandomWeapon($char->id);
-//                $this->item_service->createRandomWeapon($char->id);
-//
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
-//                $this->item_service->createRandomArmour($char->id);
 
                 return $this->sendResponse($char, 'Successfully.');
             }
