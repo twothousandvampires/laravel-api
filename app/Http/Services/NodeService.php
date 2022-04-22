@@ -70,7 +70,9 @@ class NodeService{
         $node->char_id = $char_id;
         $node->type = 4;
         $node->visited = 1;
+        $node->content_img = 'city';
         $node->save();
+
     }
 
     public function generateNodes($char){
@@ -161,9 +163,16 @@ class NodeService{
 
             if($type >= 90){
                 $new_node->type = 1;
-                $new_node->enemy_type = $this->enemy_types[0];
-                $new_node->enemy_count = random_int(10,15);
+                $new_node->content_type = $this->enemy_types[0];
+                $new_node->content_count = random_int(10,15);
                 $new_node->content_img = 'undying squad';
+            }
+
+            else if($type > 80){
+                $new_node->type = 2;
+//                $new_node->content_type = $this->enemy_types[0];
+                $new_node->content_count = random_int(1,3);
+                $new_node->content_img = 'treasure';
             }
 
             else{
