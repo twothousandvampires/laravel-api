@@ -2,6 +2,7 @@
 namespace App\Http\Services\Skill;
 
 class DestructionImpact{
+
     public function __construct()
     {
         $this->description = 'Increased AOE for spells, but reduced cast speed';
@@ -12,5 +13,12 @@ class DestructionImpact{
         $this->img_path = './src/assets/img/icons/skill/destruction_impact.png';
         $this->class = 'sorcery';
         $this->type = 'passive';
+        $this->requirements = [
+            'level' => 0
+        ];
+        $this->childs = [
+
+        ];
     }
+
 }
