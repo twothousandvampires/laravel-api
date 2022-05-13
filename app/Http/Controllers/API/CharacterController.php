@@ -90,7 +90,19 @@ class CharacterController extends BaseController
                 $new_node = Node::getNodeByCoord($request->x,$request->y,$request->char_id);
                 $char = Character::find($request->char_id);
                 switch ($new_node->type){
-                    case 0:
+                    case 1:
+                        $char->x = $request->x;
+                        $char->y = $request->y;
+                        $char->save();
+                        $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
+                        return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
+                    case 4:
+                        $char->x = $request->x;
+                        $char->y = $request->y;
+                        $char->save();
+                        $nodes = $this->node_service->generateNodes($char);
+                        return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>4], 'Successfully.');
+                    default :
                         $char->x = $request->x;
                         $char->y = $request->y;
                         $char->save();
@@ -98,12 +110,6 @@ class CharacterController extends BaseController
                         $new_node->save();
                         $nodes = $this->node_service->generateNodes($char);
                         return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
-                    case 1:
-                        $char->x = $request->x;
-                        $char->y = $request->y;
-                        $char->save();
-                        $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
-                        return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
                 }
 
             }
@@ -119,6 +125,7 @@ class CharacterController extends BaseController
                 $char = Character::find($request->char_id);
                 $node = Node::getNodeByCoord($char->x,$char->y,$char->id);
                 $node->type = 0;
+                $node->content_img = null;
                 $node->save();
                 $nodes = $this->node_service->generateNodes($char);
                 return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
