@@ -1,7 +1,5 @@
 <?php
-namespace App\Http\Services\Skill;
-use App\Http\Services\Skill\Child\IronWill;
-
+namespace App\Http\Services\Skill\combat\Armored;
 
 
 class Armored{

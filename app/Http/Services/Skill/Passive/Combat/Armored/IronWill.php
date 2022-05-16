@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Services\Skill\Child;
+namespace App\Http\Services\Skill\combat\Armored;
 
 class IronWill
 {
@@ -11,7 +11,7 @@ class IronWill
         $this->affect = ['double_resist'];
         $this->value = [10];
         $this->img_path = './src/assets/img/icons/skill/iron_will.png';
-        $this->class = 'combat';
+        $this->class = 'Combat';
         $this->type = 'passive';
         $this->requirements = [
             'level' => 0,

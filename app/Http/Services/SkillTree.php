@@ -1,8 +1,8 @@
 <?php
 namespace App\Http\Services;
 
-use App\Http\Services\Skill\DestructionImpact;
-use App\Http\Services\Skill\Armored;
+use App\Http\Services\Skill\combat\Armored\Armored;
+use App\Http\Services\Skill\combat\DesctructionImpact\DestructionImpact;
 use App\Http\Services\Skill\Versality;
 
 
