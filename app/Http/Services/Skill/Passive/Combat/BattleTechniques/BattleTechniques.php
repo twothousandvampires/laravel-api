@@ -1,7 +1,5 @@
 <?php
-namespace App\Http\Services\Skill;
-
-use App\Http\Services\Skill\Child\BattleWizard;
+namespace App\Http\Services\Skill\combat\BattleTechniques;
 
 class BattleTechniques{
     public function __construct()
@@ -12,7 +10,7 @@ class BattleTechniques{
         $this->affect = ['increased_attack_speed', 'increased_amount_block'];
         $this->value = [1 , 1];
         $this->img_path = './src/assets/img/icons/skill/battle_techniques.png';
-        $this->class = 'combat';
+        $this->class = 'Combat';
         $this->type = 'passive';
         $this->requirements = [
             'level' => 0

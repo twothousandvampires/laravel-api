@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Services\Skill;
+namespace App\Http\Services\Skill\combat\DesctructionImpact;
 
 class DestructionImpact{
 
@@ -17,7 +17,7 @@ class DestructionImpact{
             'level' => 0
         ];
         $this->childs = [
-
+            new CriticalMass()
         ];
     }
 
