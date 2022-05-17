@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Services\Skill\combat\Armored;
+namespace App\Http\Services\Skill\Passive\Combat\Armored;
 
 
 class Armored{

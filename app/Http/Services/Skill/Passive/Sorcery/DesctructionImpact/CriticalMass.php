@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services\Skill\combat\DesctructionImpact;
+namespace App\Http\Services\Skill\Passive\Sorcery\DesctructionImpact;
 
 class CriticalMass
 {

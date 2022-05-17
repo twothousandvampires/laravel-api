@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Services\Skill\Combat\Acrobatics;
+namespace App\Http\Services\Skill\Passive\Combat\Acrobatics;
 
-use App\Http\Services\Skill\combat\Armored\IronWill;
 
 class Acrobatics
 {

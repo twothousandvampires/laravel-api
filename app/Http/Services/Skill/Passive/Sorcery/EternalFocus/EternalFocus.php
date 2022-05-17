@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services\Skill\Sorcery\EternalFocus;
+namespace App\Http\Services\Skill\Passive\Sorcery\EternalFocus;
 
 
 class EternalFocus

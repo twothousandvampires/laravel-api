@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use App\Http\Services\InventoryService;
+use App\Http\Services\SkillTree;
 use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Node;
@@ -23,7 +24,7 @@ class UIController extends Controller
 
 
 
-        var_dump(SkillTreeModel::where('char_id',138)->get()->first()->body);
+        var_dump(new SkillTree());
 
     }
 

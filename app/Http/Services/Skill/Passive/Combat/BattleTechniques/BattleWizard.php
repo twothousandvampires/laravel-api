@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Services\Skill\combat\BattleTechniques;
+namespace App\Http\Services\Skill\Passive\Combat\BattleTechniques;
 
 
 class BattleWizard
