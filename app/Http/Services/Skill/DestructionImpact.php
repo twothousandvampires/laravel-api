@@ -13,7 +13,7 @@ class DestructionImpact{
         $this->img_path = './src/assets/img/icons/skill/destruction_impact.png';
         $this->class = 'sorcery';
         $this->type = 'passive';
-        $this->requirements = [
+         $this->requirements = [
             'level' => 0
         ];
         $this->childs = [
