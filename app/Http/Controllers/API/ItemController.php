@@ -6,6 +6,7 @@ use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use App\Models\Armour;
+use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
 use App\Models\Used;
@@ -85,6 +86,21 @@ class ItemController extends BaseController
         }
 
         return $this->sendResponse([], 'Successfully.');
+    }
+
+    public function use(Request $request){
+
+        $item = Used::find($request->id);
+        $skill = $this->item_service->use($item, $request->char_id);
+
+        $type = $item->class;
+        $item->delete();
+
+        switch ($type){
+            case 'book':
+            return $this->sendResponse(['data'=>$skill,'type'=>$type], 'Successfully.',);
+        }
+
     }
 
 }

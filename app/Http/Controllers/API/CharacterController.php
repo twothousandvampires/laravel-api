@@ -36,8 +36,7 @@ class CharacterController extends BaseController
             try{
                 $char = new Character();
                 $char->name = $request->name;
-                $char->class = $request->class_name;
-                $char->user_id = $request->user_id;
+                $char->user_id = Auth::user()->id;
                 $char->x = 0;
                 $char->y = 0;
                 $char->save();
@@ -72,16 +71,16 @@ class CharacterController extends BaseController
     }
 
     public function delete(Request $request){
-        if($this->isOwner($request->user_id)){
+
             $char = Character::find($request->char_id);
-            if($char){
+            if($char->user_id == Auth::user()->id){
                 $char->delete();
                 return $this->sendResponse(true,'Successfully.');
             }
             else{
                 return $this->sendError('Character not find.');
             }
-        }
+
     }
 
     public function move(Request $request){

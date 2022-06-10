@@ -15,7 +15,7 @@ class BattleWizard
         $this->affect_type = 'trigger';
         $this->trigger_chance = 20;
         $this->trigger_type = 'on_hit';
-        $this->value = [10];
+        $this->value = [2];
         $this->img_path = './src/assets/img/icons/skill/iron_will.png';
         $this->class = 'combat';
         $this->type = 'passive';

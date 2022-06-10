@@ -4,13 +4,14 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 class UserController extends BaseController
 {
-    public function show($id)
+    public function getUser()
     {
 
-        $user = User::find($id);
-
+        $user = User::find(Auth::user()->id);
         $user->characters = $user->character()->get();
 
         if (is_null($user)) {
@@ -18,5 +19,6 @@ class UserController extends BaseController
         }
 
         return $this->sendResponse($user,'user');
+
     }
 }

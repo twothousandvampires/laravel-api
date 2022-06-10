@@ -9,8 +9,12 @@ use App\Models\UsedList;
 use App\Models\WeaponList;
 use App\Models\Weapon;
 use App\Models\Armour;
+use App\Models\Character;
+use App\Models\SkillTreeModel;
 use App\Models\Propertylist;
+use App\Http\Services\Skill\Active\FireBall;
 use Illuminate\Database\Eloquent\Model;
+use App\Http\Services\SkillService;
 
 class ItemService{
 
@@ -20,6 +24,7 @@ class ItemService{
     function __construct()
     {
         $this->inv_service = new InventoryService();
+        $this->skill_service = new SkillService();
     }
 
     public function createRandomWeapon($char_id = false){
@@ -147,4 +152,21 @@ class ItemService{
         }
     }
 
+    public function use($item, $char_id){
+        switch ($item->class){
+            case 'book':
+                $tree = SkillTreeModel::where('char_id',$char_id)->first();
+                $tree_body = json_decode($tree->body);
+                if(isset($tree_body->{$item->affect})){
+                    $tree_body->{$item->affect}->level++;
+                }
+                else{
+                    $tree_body->{$item->affect} = $this->skill_service->create($item->affect);
+                }
+                $tree->body = json_encode($tree_body);
+                $tree->save();
+                return json_encode($tree_body->{$item->affect});
+        }
+
+    }
 }
