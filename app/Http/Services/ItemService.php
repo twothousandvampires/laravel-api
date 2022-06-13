@@ -152,17 +152,25 @@ class ItemService{
         }
     }
 
-    public function use($item, $char_id){
+    public function use($item, $character){
         switch ($item->class){
             case 'book':
-                $tree = SkillTreeModel::where('char_id',$char_id)->first();
+
+                $tree = SkillTreeModel::where('char_id',$character->id)->first();
+
+
                 $tree_body = json_decode($tree->body);
+
+
                 if(isset($tree_body->{$item->affect})){
                     $tree_body->{$item->affect}->level++;
                 }
                 else{
+
                     $tree_body->{$item->affect} = $this->skill_service->create($item->affect);
+
                 }
+
                 $tree->body = json_encode($tree_body);
                 $tree->save();
                 return json_encode($tree_body->{$item->affect});

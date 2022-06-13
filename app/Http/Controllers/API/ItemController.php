@@ -10,6 +10,7 @@ use App\Models\Character;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
 use App\Models\Used;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends BaseController
 {
@@ -88,19 +89,30 @@ class ItemController extends BaseController
         return $this->sendResponse([], 'Successfully.');
     }
 
-    public function use(Request $request){
+    public function use(Request $request, $item_id){
 
-        $item = Used::find($request->id);
-        $skill = $this->item_service->use($item, $request->char_id);
 
-        $type = $item->class;
-        $item->delete();
 
-        switch ($type){
-            case 'book':
-            return $this->sendResponse(['data'=>$skill,'type'=>$type], 'Successfully.',);
+        $item = Used::find($item_id);
+
+
+        $character = Character::find($item->char_id);
+
+
+
+        if($character->user_id === Auth::user()->id){
+
+
+            $skill = $this->item_service->use($item, $character);
+
+            $type = $item->class;
+            $item->delete();
+
+            switch ($type){
+                case 'book':
+                    return $this->sendResponse(['data'=>$skill,'type'=>$type], 'Successfully.',);
+            }
         }
-
     }
 
 }

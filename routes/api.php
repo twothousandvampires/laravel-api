@@ -34,7 +34,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('item/change/',[ItemController::class, 'change']);
     Route::post('item/create/',[ItemController::class, 'create']);
     Route::post('item/delete/',[ItemController::class, 'delete']);
-    Route::post('item/use/',[ItemController::class, 'use']);
+    Route::post('item/use/{id}',[ItemController::class, 'use']);
 });
 
 
