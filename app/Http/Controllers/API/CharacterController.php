@@ -81,37 +81,31 @@ class CharacterController extends BaseController
 
     }
 
-    public function move(Request $request){
-        if($this->isOwner($request->user_id)){
-            try{
-                $new_node = Node::getNodeByCoord($request->x,$request->y,$request->char_id);
-                $char = Character::find($request->char_id);
-                switch ($new_node->type){
-                    case 1:
-                        $char->x = $request->x;
-                        $char->y = $request->y;
-                        $char->save();
-                        $distance = round(sqrt(pow($char->x,2) + pow($char->y,2)),2);
-                        return $this->sendResponse(['char'=>$char, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1], 'Successfully.');
-                    case 4:
-                        $char->x = $request->x;
-                        $char->y = $request->y;
-                        $char->save();
-                        $nodes = $this->node_service->generateNodes($char);
-                        return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>4], 'Successfully.');
-                    default :
-                        $char->x = $request->x;
-                        $char->y = $request->y;
-                        $char->save();
-                        $new_node->visited = 1;
-                        $new_node->save();
-                        $nodes = $this->node_service->generateNodes($char);
-                        return $this->sendResponse(['nodes'=>$nodes,'char'=>$char,'node_type'=>0], 'Successfully.');
-                }
-
-            }
-            catch (\Exception $e){
-                return $e;
+    public function move(Request $request, $char_id){
+        $character = $this->isOwner($char_id);
+        if($character){
+            $new_node = Node::getNodeByCoord($request->x,$request->y,$char_id);
+            switch ($new_node->type){
+                case 1:
+                    $character->x = $request->x;
+                    $character->y = $request->y;
+                    $character->save();
+                    $distance = round(sqrt(pow($character->x,2) + pow($character->y,2)),2);
+                    return $this->sendResponse(['char'=>$character, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1]);
+                case 4:
+                    $character->x = $request->x;
+                    $character->y = $request->y;
+                    $character->save();
+                    $nodes = $this->node_service->generateNodes($character);
+                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$character,'node_type'=>4]);
+                default :
+                    $character->x = $request->x;
+                    $character->y = $request->y;
+                    $character->save();
+                    $new_node->visited = 1;
+                    $new_node->save();
+                    $nodes = $this->node_service->generateNodes($character);
+                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$character,'node_type'=>0]);
             }
         }
     }

@@ -29,7 +29,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user',[UserController::class, 'getUser'] )->middleware('cors');
     Route::post('character/{char_id}/world',[CharacterController::class, 'world']);
     Route::post('character/win/',[CharacterController::class, 'win']);
-    Route::post('character/move/',[CharacterController::class, 'move']);
+    Route::post('character/{char_id}/move/',[CharacterController::class, 'move']);
     Route::post('character/delete/',[CharacterController::class, 'delete']);
     Route::post('item/change/',[ItemController::class, 'change']);
     Route::post('item/create/',[ItemController::class, 'create']);
