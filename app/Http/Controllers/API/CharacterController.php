@@ -26,9 +26,12 @@ class CharacterController extends BaseController
         $this->character_service = new CharacterService();
     }
 
-    private function isOwner($user_id){
-        return  true;
-        return Auth::user()->id == $user_id;
+    private function isOwner($char_id){
+        $character = Character::find($char_id);
+        if($character->user_id === Auth::user()->id){
+            return $character;
+        }
+        return false;
     }
 
     public function create(Request $request){
@@ -55,19 +58,14 @@ class CharacterController extends BaseController
 
     }
 
-    public function world(Request $request){
-        if($this->isOwner($request->user_id)){
-            try{
-                $char = $this->character_service->componateCharacter($request->char_id);
-                $nodes = $this->node_service->generateNodes($char['character']);
-                return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=>0 , 'char_update'=>true], 'Successfully.');
-            }
-            catch (\Exception $e){
-                return $e;
-            }
-
-
+    public function world($char_id){
+        $character = $this->isOwner($char_id);
+        if($character){
+            $char = $this->character_service->componateCharacter($char_id);
+            $nodes = $this->node_service->generateNodes($char['character']);
+            return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=> 0 ]);
         }
+        return $this->sendError('something went wrong.');
     }
 
     public function delete(Request $request){
