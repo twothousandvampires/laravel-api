@@ -35,27 +35,16 @@ class CharacterController extends BaseController
     }
 
     public function create(Request $request){
-        if($this->isOwner($request->user_id)){
-            try{
-                $char = new Character();
-                $char->name = $request->name;
-                $char->user_id = Auth::user()->id;
-                $char->x = 0;
-                $char->y = 0;
-                $char->save();
-                SkillTreeModel::make($char->id);
-                $this->node_service->generateSingleNode(0,0,4,$char->id);
+        $char = new Character();
+        $char->name = $request->name;
+        $char->user_id = Auth::user()->id;
+        $char->x = 0;
+        $char->y = 0;
+        $char->save();
+        SkillTreeModel::make($char->id);
+        $this->node_service->generateSingleNode(0,0,4,$char->id);
 
-                return $this->sendResponse($char, 'Successfully.');
-            }
-            catch(\Exception $e){
-                return $e;
-            }
-        }
-        else{
-            return $this->sendResponse('her', 'Successfully.');
-        }
-
+        return $this->sendResponse($char, 'Successfully.');
     }
 
     public function world($char_id){
@@ -68,17 +57,13 @@ class CharacterController extends BaseController
         return $this->sendError('something went wrong.');
     }
 
-    public function delete(Request $request){
-
-            $char = Character::find($request->char_id);
-            if($char->user_id == Auth::user()->id){
-                $char->delete();
+    public function delete($char_id){
+            $character = $this->isOwner($char_id);
+            if($character){
+                $character->delete();
                 return $this->sendResponse(true,'Successfully.');
             }
-            else{
-                return $this->sendError('Character not find.');
-            }
-
+            return $this->sendError('Character not find.');
     }
 
     public function move(Request $request, $char_id){
@@ -90,8 +75,7 @@ class CharacterController extends BaseController
                     $character->x = $request->x;
                     $character->y = $request->y;
                     $character->save();
-                    $distance = round(sqrt(pow($character->x,2) + pow($character->y,2)),2);
-                    return $this->sendResponse(['char'=>$character, 'dist'=>$distance,'number'=>random_int(1,1),'node_type'=>1]);
+                    return $this->sendResponse(['node'=>$new_node,'node_type'=>1]);
                 case 4:
                     $character->x = $request->x;
                     $character->y = $request->y;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Services;
 use App\Models\Node;
+use App\Models\Enemy;
 
 class NodeService{
 
@@ -10,7 +11,7 @@ class NodeService{
      */
     private $nomenclature_types;
     protected $enemy_types = [
-        'undying'
+        'undying squad'
     ];
 
     function __construct(){
@@ -70,7 +71,7 @@ class NodeService{
         $node->char_id = $char_id;
         $node->type = 4;
         $node->visited = 1;
-        $node->content_img = 'city';
+        $node->content_type = 'city';
         $node->save();
 
     }
@@ -164,15 +165,14 @@ class NodeService{
             if($type >= 90){
                 $new_node->type = 1;
                 $new_node->content_type = $this->enemy_types[0];
-                $new_node->content_count = random_int(10,15);
-                $new_node->content_img = 'undying squad';
+                $new_node->content_count = json_encode($this->generateGroup($new_node->content_type));
+                $new_node->map = json_encode($this->generateMap());
             }
 
             else if($type > 80){
                 $new_node->type = 2;
-//                $new_node->content_type = $this->enemy_types[0];
-                $new_node->content_count = random_int(1,3);
-                $new_node->content_img = 'treasure';
+                $new_node->content_count = json_encode(random_int(1,3));
+                $new_node->content_type = 'treasure';
             }
 
             else{
@@ -202,5 +202,33 @@ class NodeService{
 
 
         return $all->toArray();
+    }
+
+    public function generateGroup($type){
+
+        switch ($type){
+            case 'undying squad':
+                $group = [];
+                $warriors = Enemy::where('name','=','skeleton warrior')->first();
+                $warriors->count = random_int(10,15);
+                $group[] = $warriors;
+
+                $archers = Enemy::where('name', '=', 'skeleton archer')->first();
+                $archers->count = random_int(5,10);
+                $group[] = $archers;
+
+                $mages = Enemy::where('name', '=', 'skeleton mage')->first();
+                $mages->count = random_int(2,5);
+                $group[] = $mages;
+
+                return $group;
+        }
+    }
+
+    public function generateMap(){
+        $map = json_decode('{}');
+        $map->width  = random_int(600,900);
+        $map->height = random_int(600,900);
+        return $map;
     }
 }
