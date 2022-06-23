@@ -28,17 +28,25 @@ class ItemController extends BaseController
 
     public function change(Request $request){
 
+        $changed_item = json_decode($request->changed_item);
+        $exchanged_item = json_decode($request->exchanged_item);
 
-        switch ($request->which_type){
-            case  'weapon':
-                $which = Weapon::find($request->which_id);
+
+
+        $change = $exchanged_item->exchange;
+
+        switch ($changed_item->type){
+            case 'weapon':
+                $which = Weapon::find($changed_item->id);
                 break;
         }
 
-        if($request->for_what_id){
-            switch ($request->for_what_type){
-                case  'weapon':
-                    $for_what = Weapon::find($request->for_what_id);
+
+        if($change){
+
+            switch ($exchanged_item->type){
+                case 'weapon':
+                    $for_what = Weapon::find($exchanged_item->id);
                     break;
             }
 
@@ -54,8 +62,8 @@ class ItemController extends BaseController
             $for_what->save();
         }
         else{
-            $which->slot = $request->slot;
-            $which->slot_type = $request->slot_type;
+            $which->slot = $exchanged_item->id;
+            $which->slot_type = $exchanged_item->type;
             $which->save();
         }
 
