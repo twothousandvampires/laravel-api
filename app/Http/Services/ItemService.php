@@ -7,7 +7,7 @@ use App\Models\ArmourList;
 use App\Models\Used;
 use App\Models\UsedList;
 use App\Models\WeaponList;
-use App\Models\Weapon;
+use App\Models\Item;
 use App\Models\Armour;
 use App\Models\Character;
 use App\Models\SkillTreeModel;
@@ -29,47 +29,60 @@ class ItemService{
 
     public function createRandomWeapon($char_id = false){
 
-        $base = WeaponList::inRandomOrder()->limit(1)->get()->first();
+        $base = WeaponList::inRandomOrder()->
+                            limit(1)->
+                            get()->
+                            first();
+
+        $base_props = Propertylist::where('type','like','%base%')->
+                                    where('item_name', $base->name)->
+                                    select('min_value', 'max_value', 'name', 'type')
+                                    ->get();
         $props = Propertylist::
-                                where('item_type','like', '%' . $base->type . '%')->
-                                orWhere('item_class','like', '%' . $base->class . '%')->
-                                orWhere('item_name' ,'like', '%' . $base->name . '%' )->
-                                inRandomOrder()->
-                                limit(3)->
-                                get();
+                                where('type', '!=', 'base')->
+                                where('type', '!=', 'base_local')->
+                               where('item_type','like', '%' . $base->type . '%')->
+                               orWhere('item_class','like', '%' . $base->class . '%')->
+                               orWhere('item_name' ,'like', '%' . $base->name . '%' )->
+                               inRandomOrder()->
+                               limit(3)->
+                               select('min_value', 'max_value', 'name', 'type')->get();
 
-        $weapon = new Weapon();
 
-        if(count($props)) {
-            for ($i = 1; $i < count($props); $i++) {
-                $prop = $props[$i - 1];
-                $prop_body = $prop->type . ';';
-                $prop_body .= $prop->name . ';';
-                $prop_body .= random_int($prop->min_value, $prop->max_value);
+        $p = $base_props->merge($props);
+$p = $p->all();
 
-                $weapon->{'property_' . $i} = $prop_body;
-            }
 
+
+        forEach($props as $prop){
+            $prop->value = random_int($prop->min_value, $prop->max_value);
+            unset($prop->min_value);
+            unset($prop->max_value);
         }
-
-        $weapon->property_base = 'base;' .  $base->base_property_name . ';' .random_int($base->base_property_min_value, $base->base_property_max_value);
-
-        $weapon->name = $base->name;
-        $weapon->type = 'weapon';
-        $weapon->min_damage = $base->min_damage;
-        $weapon->max_damage = $base->max_damage;
-        $weapon->img_path = $base->img_path;
-        $weapon->class = $base->class;
-        $weapon->attack_speed = $base->attack_speed;
-        $weapon->attack_range = $base->attack_range;
-        $weapon->crit_chance = $base->crit_chance;
+//        forEach($base_props as $prop){
+//            $prop->value = random_int($prop->min_value, $prop->max_value);
+//            unset($prop->min_value);
+//            unset($prop->max_value);
+//        }
+        $weapon = new Item();
+        $weapon->item_name = $base->name;
+        $weapon->item_type = $base->type;
+        $weapon->item_class = $base->class;
         if($char_id){
             $weapon->char_id = $char_id;
         }
-        $weapon->slot_type = 'inv';
         $weapon->slot = min($this->inv_service->getFreeSlots($char_id));
+        $item_body = json_decode('{}');
+        $item_body->img_path = $base->img_path;
+        $item_body->min_damage = $base->min_damage;
+        $item_body->max_damage = $base->max_damage;
+        $item_body->attack_speed = $base->attack_speed;
+        $item_body->attack_range = $base->attack_range;
+        $item_body->crit_chance = $base->crit_chance;
+//        $item_body->base_props = $base_props;
+        $item_body->props = $p;
+        $weapon->item_body = json_encode($item_body);
         $weapon->save();
-
 
         return $weapon;
     }
@@ -139,17 +152,18 @@ class ItemService{
 
     public function createRandomItem($char_id = false){
 
-        $r = random_int(0,100);
-
-//        if($r > 33){
+//        $r = random_int(0,100);
+//
+//        if($r < 33){
 //            return $this->createRandomArmour($char_id);
 //        }
-        if($r > 50){
-            return $this->createRandomWeapon($char_id);
-        }
-        else{
-            return $this->createRandomUsed($char_id);
-        }
+//        else if($r < 66){
+//            return $this->createRandomWeapon($char_id);
+//        }
+//        else{
+//            return $this->createRandomUsed($char_id);
+//        }
+        return $this->createRandomWeapon($char_id);
     }
 
     public function use($item, $character){

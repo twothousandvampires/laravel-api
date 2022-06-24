@@ -23,9 +23,7 @@ class UIController extends Controller
 
     public function index(){
 
-        $this->skill_service->create("FireBall");
-
-        var_dump(json_decode(SkillTreeModel::where('char_id',150)->first()->body)->{'armored'});
+        var_dump($this->item_service->createRandomWeapon());
 
     }
 

@@ -31,13 +31,16 @@ class ItemController extends BaseController
         $changed_item = json_decode($request->changed_item);
         $exchanged_item = json_decode($request->exchanged_item);
 
-
+        $class = ucfirst($changed_item->type);
 
         $change = $exchanged_item->exchange;
 
         switch ($changed_item->type){
             case 'weapon':
-                $which = Weapon::find($changed_item->id);
+                $which = "App\\Models\\".$class::find($changed_item->id);
+                break;
+            case 'armour':
+                $which = Armour::find($changed_item->id);
                 break;
         }
 
@@ -47,6 +50,9 @@ class ItemController extends BaseController
             switch ($exchanged_item->type){
                 case 'weapon':
                     $for_what = Weapon::find($exchanged_item->id);
+                    break;
+                case 'armour':
+                    $for_what = Armour::find($exchanged_item->id);
                     break;
             }
 
