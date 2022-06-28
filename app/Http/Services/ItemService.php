@@ -34,24 +34,20 @@ class ItemService{
                             get()->
                             first();
 
-        $base_props = Propertylist::where('type','like','%base%')->
+        $base_props = Propertylist::where('type', 'base')->
                                     where('item_name', $base->name)->
-                                    select('min_value', 'max_value', 'name', 'type')
-                                    ->get();
+                                    select('min_value', 'max_value', 'name', 'type');
+
         $props = Propertylist::
                                 where('type', '!=', 'base')->
-                                where('type', '!=', 'base_local')->
                                where('item_type','like', '%' . $base->type . '%')->
                                orWhere('item_class','like', '%' . $base->class . '%')->
                                orWhere('item_name' ,'like', '%' . $base->name . '%' )->
                                inRandomOrder()->
                                limit(3)->
-                               select('min_value', 'max_value', 'name', 'type')->get();
-
-
-        $p = $base_props->merge($props);
-$p = $p->all();
-
+                                select('min_value', 'max_value', 'name', 'type')->
+                                union($base_props)
+                               ->get();
 
 
         forEach($props as $prop){
@@ -59,11 +55,7 @@ $p = $p->all();
             unset($prop->min_value);
             unset($prop->max_value);
         }
-//        forEach($base_props as $prop){
-//            $prop->value = random_int($prop->min_value, $prop->max_value);
-//            unset($prop->min_value);
-//            unset($prop->max_value);
-//        }
+
         $weapon = new Item();
         $weapon->item_name = $base->name;
         $weapon->item_type = $base->type;
@@ -80,7 +72,7 @@ $p = $p->all();
         $item_body->attack_range = $base->attack_range;
         $item_body->crit_chance = $base->crit_chance;
 //        $item_body->base_props = $base_props;
-        $item_body->props = $p;
+        $item_body->props = $props;
         $weapon->item_body = json_encode($item_body);
         $weapon->save();
 

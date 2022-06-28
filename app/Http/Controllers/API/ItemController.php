@@ -7,6 +7,7 @@ use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use App\Models\Armour;
 use App\Models\Character;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use App\Models\Weapon;
 use App\Models\Used;
@@ -18,6 +19,14 @@ class ItemController extends BaseController
     public $item_service;
     private $character_service;
 
+    private function isOwner($char_id){
+        $character = Character::find($char_id);
+        if($character->user_id === Auth::user()->id){
+            return $character;
+        }
+        return false;
+    }
+
     function __construct()
     {
         $this->node_service = new NodeService();
@@ -28,53 +37,32 @@ class ItemController extends BaseController
 
     public function change(Request $request){
 
-        $changed_item = json_decode($request->changed_item);
-        $exchanged_item = json_decode($request->exchanged_item);
-
-        $class = ucfirst($changed_item->type);
-
-        $change = $exchanged_item->exchange;
-
-        switch ($changed_item->type){
-            case 'weapon':
-                $which = "App\\Models\\".$class::find($changed_item->id);
-                break;
-            case 'armour':
-                $which = Armour::find($changed_item->id);
-                break;
-        }
+        $from = Item::find($request->from);
+        $character = $this->isOwner($from->char_id);
 
 
-        if($change){
+        if($character){
 
-            switch ($exchanged_item->type){
-                case 'weapon':
-                    $for_what = Weapon::find($exchanged_item->id);
-                    break;
-                case 'armour':
-                    $for_what = Armour::find($exchanged_item->id);
-                    break;
+            if($request->exchange){
+                $to = Item::find($request->to);
+                $temp_slot = $from->slot;
+
+                $from->slot = $to->slot;
+                $from->save();
+
+                $to->slot = $temp_slot;
+                $to->save();
             }
-
-            $temp_slot = $which->slot;
-            $temp_slot_type = $which->slot_type;
-
-            $which->slot = $for_what->slot;
-            $which->slot_type = $for_what->slot_type;
-            $which->save();
-
-            $for_what->slot = $temp_slot;
-            $for_what->slot_type = $temp_slot_type;
-            $for_what->save();
+            else{
+                $from->slot = $request->to;
+                $from->save();
+            }
+            return $this->sendResponse([], 'Successfully.');
         }
-        else{
-            $which->slot = $exchanged_item->id;
-            $which->slot_type = $exchanged_item->type;
-            $which->save();
-        }
-
-        return $this->sendResponse(['which' => $which,'for_what' => $for_what ?? null], 'Successfully.');
     }
+
+
+
 
     public function create(Request $request){
 
