@@ -81,40 +81,49 @@ class ItemService{
 
     public function createRandomArmour($char_id = false){
         $base = ArmourList::inRandomOrder()->limit(1)->get()->first();
-        $prop = Propertylist::
+
+
+        $base_props = Propertylist::where('type', 'base')->
+                                    where('item_name', $base->name)->
+                                    select('min_value', 'max_value', 'name', 'type');
+
+        $props = Propertylist::
+                            where('type', '!=', 'base')->
                             where('item_type','like', '%' . $base->type . '%')->
                             orWhere('item_class','like', '%' . $base->class . '%')->
                             orWhere('item_name' ,'like', '%' . $base->name . '%' )->
                             inRandomOrder()->
-                            limit(1)->
-                            get()->first();
+                            limit(3)->
+                            select('min_value', 'max_value', 'name', 'type')->
+                            union($base_props)
+                                ->get();
 
-        $prop_body = $prop->type . ';';
-        $prop_body .= $prop->value_type . ';';
-        $prop_body .= $prop->name . ';';
 
-        if($prop->value_type === 'range'){
-            $prop_body .= $prop->min_value . '/';
-            $prop_body .= random_int($prop->min_value, $prop->max_value ) . ';';
+
+
+        forEach($props as $prop){
+            $prop->value = random_int($prop->min_value, $prop->max_value);
+            unset($prop->min_value);
+            unset($prop->max_value);
         }
-        else{
-            $prop_body .= random_int($prop->min_value, $prop->max_value ) . ';';
-        }
-        $armour = new Armour();
-        $armour->name = $base->name;
-        $armour->type =  $base->type;
-        $armour->class = $base->class;
 
-        if( $base->armour ) {$armour->armour = $base->armour;}
-        if( $base->energy_regen ) {$armour->energy_regen = $base->energy_regen;}
-        if( $base->add_spell_damage ) {$armour->add_spell_damage = $base->add_spell_damage;}
-        $armour->img_path = $base->img_path;
+        $armour = new Item();
+        $armour->item_name = $base->name;
+        $armour->item_type = $base->type;
+        $armour->item_class = $base->class;
         if($char_id){
             $armour->char_id = $char_id;
         }
-        $armour->property_1 = $prop_body;
-        $armour->slot_type = 'inv';
         $armour->slot = min($this->inv_service->getFreeSlots($char_id));
+        $item_body = json_decode('{}');
+        $item_body->img_path = $base->img_path;
+        $item_body->armour = $base->armour;
+        $item_body->evade = $base->evade;
+        $item_body->resist = $base->resist;
+        $item_body->block = $base->block;
+        $item_body->block_count = $base->block_count;
+        $item_body->props = $props;
+        $armour->item_body = json_encode($item_body);
         $armour->save();
 
         return $armour;
@@ -144,18 +153,18 @@ class ItemService{
 
     public function createRandomItem($char_id = false){
 
-//        $r = random_int(0,100);
-//
-//        if($r < 33){
-//            return $this->createRandomArmour($char_id);
-//        }
-//        else if($r < 66){
-//            return $this->createRandomWeapon($char_id);
-//        }
-//        else{
+        $r = random_int(0,100);
+
+        if($r < 50){
+            return $this->createRandomArmour($char_id);
+        }
+        else if($r < 200){
+            return $this->createRandomWeapon($char_id);
+        }
+        else{
 //            return $this->createRandomUsed($char_id);
-//        }
-        return $this->createRandomWeapon($char_id);
+        }
+//        return $this->createRandomWeapon($char_id);
     }
 
     public function use($item, $character){
