@@ -6,7 +6,7 @@ use App\Http\Services\InventoryService;
 use App\Models\ArmourList;
 use App\Models\Used;
 use App\Models\UsedList;
-use App\Models\WeaponList;
+use App\Models\BaseList;
 use App\Models\Item;
 use App\Models\Armour;
 use App\Models\Character;
@@ -29,54 +29,75 @@ class ItemService{
 
     public function createRandomWeapon($char_id = false){
 
-        $base = WeaponList::inRandomOrder()->
-                            limit(1)->
-                            get()->
-                            first();
-
-        $base_props = Propertylist::where('type', 'base')->
-                                    where('item_name', $base->name)->
-                                    select('min_value', 'max_value', 'name', 'type');
-
-        $props = Propertylist::
-                                where('type', '!=', 'base')->
-                               where('item_type','like', '%' . $base->type . '%')->
-                               orWhere('item_class','like', '%' . $base->class . '%')->
-                               orWhere('item_name' ,'like', '%' . $base->name . '%' )->
-                               inRandomOrder()->
-                               limit(3)->
-                                select('min_value', 'max_value', 'name', 'type')->
-                                union($base_props)
-                               ->get();
+        $item_data = [];
+        $item_data['char_id'] = 178;
+        $item_data['slot'] = min($this->inv_service->getFreeSlots($char_id));
+        $rarity = 'normal';
+        $item_data['quality'] = $rarity;
+        $base = BaseList::inRandomOrder()->select('name','type','class','slot','price','img_path','property_count')->first()->toArray();
+        $item_data = array_merge($item_data, $base);
 
 
-        forEach($props as $prop){
-            $prop->value = random_int($prop->min_value, $prop->max_value);
-            unset($prop->min_value);
-            unset($prop->max_value);
+        $property = Propertylist::where('item_name', $base['name'])->select($rarity,'stat','name')->get()->toArray();
+
+        foreach ($property as $key => $prop){
+            $item_data[$key + 1 . '_property_name'] = $prop['name'];
+            $item_data[$key + 1 . '_property_value'] = $prop[$rarity];
+            $item_data[$key + 1 . '_property_stat'] = $prop['stat'];
         }
 
-        $weapon = new Item();
-        $weapon->item_name = $base->name;
-        $weapon->item_type = $base->type;
-        $weapon->item_class = $base->class;
-        if($char_id){
-            $weapon->char_id = $char_id;
-        }
-        $weapon->slot = min($this->inv_service->getFreeSlots($char_id));
-        $item_body = json_decode('{}');
-        $item_body->img_path = $base->img_path;
-        $item_body->min_damage = $base->min_damage;
-        $item_body->max_damage = $base->max_damage;
-        $item_body->attack_speed = $base->attack_speed;
-        $item_body->attack_range = $base->attack_range;
-        $item_body->crit_chance = $base->crit_chance;
-//        $item_body->base_props = $base_props;
-        $item_body->props = $props;
-        $weapon->item_body = json_encode($item_body);
-        $weapon->save();
 
-        return $weapon;
+        return  Item::create($item_data);
+
+
+//        $base = BaseList::inRandomOrder()->
+//                            limit(1)->
+//                            get()->
+//                            first();
+//
+//        $base_props = Propertylist::where('type', 'base')->
+//                                    where('item_name', $base->name)->
+//                                    select('min_value', 'max_value', 'name', 'type');
+//
+//        $props = Propertylist::
+//                                where('type', '!=', 'base')->
+//                               where('item_type','like', '%' . $base->type . '%')->
+//                               orWhere('item_class','like', '%' . $base->class . '%')->
+//                               orWhere('item_name' ,'like', '%' . $base->name . '%' )->
+//                               inRandomOrder()->
+//                               limit(3)->
+//                                select('min_value', 'max_value', 'name', 'type')->
+//                                union($base_props)
+//                               ->get();
+//
+//
+//        forEach($props as $prop){
+//            $prop->value = random_int($prop->min_value, $prop->max_value);
+//            unset($prop->min_value);
+//            unset($prop->max_value);
+//        }
+//
+//        $weapon = new Item();
+//        $weapon->item_name = $base->name;
+//        $weapon->item_type = $base->type;
+//        $weapon->item_class = $base->class;
+//        if($char_id){
+//            $weapon->char_id = $char_id;
+//        }
+//        $weapon->slot = min($this->inv_service->getFreeSlots($char_id));
+//        $item_body = json_decode('{}');
+//        $item_body->img_path = $base->img_path;
+//        $item_body->min_damage = $base->min_damage;
+//        $item_body->max_damage = $base->max_damage;
+//        $item_body->attack_speed = $base->attack_speed;
+//        $item_body->attack_range = $base->attack_range;
+//        $item_body->crit_chance = $base->crit_chance;
+////        $item_body->base_props = $base_props;
+//        $item_body->props = $props;
+//        $weapon->item_body = json_encode($item_body);
+//        $weapon->save();
+//
+//        return $weapon;
     }
 
     public function createRandomArmour($char_id = false){
@@ -153,18 +174,18 @@ class ItemService{
 
     public function createRandomItem($char_id = false){
 
-        $r = random_int(0,100);
-
-        if($r < 50){
-            return $this->createRandomArmour($char_id);
-        }
-        else if($r < 200){
-            return $this->createRandomWeapon($char_id);
-        }
-        else{
-//            return $this->createRandomUsed($char_id);
-        }
-//        return $this->createRandomWeapon($char_id);
+//        $r = random_int(0,100);
+//
+//        if($r < 50){
+//            return $this->createRandomArmour($char_id);
+//        }
+//        else if($r < 200){
+//            return $this->createRandomWeapon($char_id);
+//        }
+//        else{
+////            return $this->createRandomUsed($char_id);
+//        }
+        return $this->createRandomWeapon($char_id);
     }
 
     public function use($item, $character){

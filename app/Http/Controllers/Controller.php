@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WeaponList;
+use App\Models\BaseList;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
