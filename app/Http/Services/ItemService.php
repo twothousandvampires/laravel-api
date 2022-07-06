@@ -18,6 +18,13 @@ use App\Http\Services\SkillService;
 
 class ItemService{
 
+    const RARITY= [
+        0 => 'low',
+        1 => 'normal',
+        2 => 'rare',
+        3 => 'masterpiace'
+    ];
+
 
     public $inv_service;
 
@@ -30,11 +37,13 @@ class ItemService{
     public function createRandomWeapon($char_id = false){
 
         $item_data = [];
-        $item_data['char_id'] = 178;
+        if($char_id){
+            $item_data['char_id'] = $char_id;
+        }
         $item_data['slot'] = min($this->inv_service->getFreeSlots($char_id));
-        $rarity = 'normal';
+        $rarity = self::RARITY[random_int(0,3)];
         $item_data['quality'] = $rarity;
-        $base = BaseList::inRandomOrder()->select('name','type','class','slot','price','img_path','property_count')->first()->toArray();
+        $base = BaseList::inRandomOrder()->select('name','type','class','price','img_path','property_count')->first()->toArray();
         $item_data = array_merge($item_data, $base);
 
 
