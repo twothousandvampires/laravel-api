@@ -9,7 +9,7 @@ use App\Models\Used;
 class InventoryService{
 
     public function createInventory($char_id){
-        $items = Item::where('char_id',$char_id)->get()->toArray();
+        $items = Item::where('char_id',$char_id)->with('properties')->get();
         return $items;
     }
 

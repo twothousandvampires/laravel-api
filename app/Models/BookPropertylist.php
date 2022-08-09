@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Propertylist extends Model
+class BookPropertylist extends Model
 {
     use HasFactory;
-
-    protected $table = 'property_list';
+    protected $table = 'list_of_book_properties';
 }
