@@ -5,11 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ArmourList extends Model
+class BookPropertiesList extends Model
 {
-
     use HasFactory;
-
-    protected $table = 'armours_list';
-
+    protected $table = 'book_properties_list';
 }

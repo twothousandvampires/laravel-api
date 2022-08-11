@@ -11,17 +11,8 @@ class CharacterService{
         $this->inventory_service = new InventoryService();
     }
 
-    public function componateCharacter($char_id): array
+    public function componateCharacter($char_id): object
     {
-        $character = Character::find($char_id);
-        $items = $this->inventory_service->createInventory($char_id);
-        $skill_tree = SkillTreeModel::where('char_id',$char_id)->first()->body;
-
-        return [
-            'character' => $character,
-            'items' => $items,
-            'skill_tree' => $skill_tree,
-        ];
+        return Character::with('items.properties')->with('skills.properties')->find($char_id);
     }
-
 }

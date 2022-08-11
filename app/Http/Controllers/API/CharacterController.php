@@ -51,7 +51,7 @@ class CharacterController extends BaseController
         $character = $this->isOwner($char_id);
         if($character){
             $char = $this->character_service->componateCharacter($char_id);
-            $nodes = $this->node_service->generateNodes($char['character']);
+            $nodes = $this->node_service->generateNodes($char);
             return $this->sendResponse(['nodes' => $nodes, 'character' => $char,'node_type'=> 0 ]);
         }
         return $this->sendError('something went wrong.');
