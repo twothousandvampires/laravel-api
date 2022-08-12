@@ -7,6 +7,8 @@ use App\Models\Item;
 use App\Models\EquipPropertiesList;
 use App\Models\BookPropertiesList;
 use App\Models\Property;
+use App\Models\SecondarySkill;
+use App\Models\SecondarySkillsList;
 use Illuminate\Http\Request;
 use App\Models\Skill;
 use App\Models\SkillsList;
@@ -126,12 +128,39 @@ class ItemService{
                         $new_prop->increased_value = $prop->increased_value;
                         $new_prop->skill_name = $prop->skill_name;
                         $new_prop->progression_per_level = $prop->progression_per_level;
-                        $new_prop->prop_name = $prop->prop_name;
-                        $new_prop->type = $prop->type;
-                        $new_prop->img_path = $prop->img_path;
                         $new_prop->skill_id = $skill->id;
                         $new_prop->order = $prop->order;
                         $new_prop->save();
+                    }
+
+                    $chields = SecondarySkillsList::where('main_skill_name' ,$skill->name)->get();
+
+                    foreach ($chields as $chield){
+                        $new_chiled = new SecondarySkill();
+                        $new_chiled->main_skill_id = $skill->id;
+                        $new_chiled->description = $chield->description;
+                        $new_chiled->subtype = $chield->subtype;
+                        $new_chiled->img_path = $chield->img_path;
+                        $new_chiled->img_path = $chield->img_path;
+                        $new_chiled->type = $chield->type;
+                        $new_chiled->name = $chield->name;
+                        $new_chiled->save();
+
+                        $props = SkillPropertiesList::where('skill_name', $new_chiled->name)->get();
+
+                        foreach($props as $prop){
+                            $new_prop = new SkillProperties();
+                            $new_prop->increased_stat = $prop->increased_stat;
+                            $new_prop->chance = $prop->chance;
+                            $new_prop->min_value = $prop->min_value;
+                            $new_prop->max_value = $prop->max_value;
+                            $new_prop->increased_value = $prop->increased_value;
+                            $new_prop->skill_name = $prop->skill_name;
+                            $new_prop->progression_per_level = $prop->progression_per_level;
+                            $new_prop->secondary_skill_id = $new_chiled->id;
+                            $new_prop->order = $prop->order;
+                            $new_prop->save();
+                        }
                     }
 
                     return $skill;
