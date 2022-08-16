@@ -15,4 +15,5 @@ class CharacterService{
     {
         return Character::with('items.properties', 'skills.properties', 'skills.chields.properties')->find($char_id);
     }
+
 }
