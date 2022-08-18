@@ -23,7 +23,7 @@ class UIController extends Controller
 
     public function index(){
 
-        echo '1';
+        echo '<pre>';
         var_dump($this->item_service->createRandomItem());
 
     }

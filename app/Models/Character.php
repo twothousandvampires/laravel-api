@@ -32,12 +32,11 @@ class Character extends Model
 
     public function items()
     {
-        return $this->hasMany(Item::class,'char_id','id');
-    }
-
-    public function skills()
-    {
-        return $this->hasMany(Skill::class,'char_id','id');
+        $this->items = $this->hasMany(Item::class,'char_id','id')->get();
+        foreach ($this->items as $item){
+            $item = $item->props();
+        }
+        return $this;
     }
 
 }

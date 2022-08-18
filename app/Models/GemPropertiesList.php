@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SkillProperties extends Model
+class GemPropertiesList extends Model
 {
     use HasFactory;
-    protected $table = 'skill_properties';
+
     public $timestamps = false;
+    protected $table = 'gem_properties_list';
+
 }

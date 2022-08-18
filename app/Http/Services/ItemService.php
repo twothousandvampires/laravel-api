@@ -2,6 +2,8 @@
 
 namespace App\Http\Services;
 
+use App\Models\GemProperties;
+use App\Models\GemPropertiesList;
 use App\Models\ItemsList;
 use App\Models\Item;
 use App\Models\EquipPropertiesList;
@@ -60,6 +62,32 @@ class ItemService{
         return Item::with('properties')->find($item->id);
     }
 
+    public function createRandomGem($char_id = false){
+        $item_data = [];
+        if($char_id){
+            $item_data['char_id'] = $char_id;
+        }
+
+        $item_data['slot'] = min($this->inv_service->getFreeSlots($char_id));
+        $base = ItemsList::inRandomOrder()->where('type','skill_gem')->select('name','type','class','price','img_path','subclass')->first()->toArray();
+
+        $item_data = array_merge($item_data, $base);
+        $item = Item::create($item_data);
+
+
+        $prop = GemPropertiesList::where('gem_type', $base['subclass'])->where('type','parent')->inRandomOrder()->first();
+
+
+            GemProperties::create(['item_id' => $item->id,
+                'name' => $prop->name,
+                'level' => 1,
+                'exp_needed' => $prop->exp_needed,
+                'description' => $prop->description,
+                'type' => $prop->type]);
+
+
+        return Item::find($item->id)->props();
+    }
 
     public function createRandomUsed($char_id = false){
         $item_data = [];
@@ -73,8 +101,6 @@ class ItemService{
         $item = Item::create($item_data);
 
         $property = BookPropertiesList::where('item_name', $base['name'])->get();
-
-
 
         foreach ($property as $prop){
             Property::create(['item_id' => $item->id,
@@ -96,7 +122,7 @@ class ItemService{
 //        else {
 //            return $this->createRandomUsed($char_id);
 //        }
-        return $this->createRandomUsed($char_id);
+        return $this->createRandomGem($char_id);
     }
 
     public function use(Request $request, $item, $character){

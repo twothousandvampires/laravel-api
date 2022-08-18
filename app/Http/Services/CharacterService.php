@@ -13,7 +13,7 @@ class CharacterService{
 
     public function componateCharacter($char_id): object
     {
-        return Character::with('items.properties', 'skills.properties', 'skills.chields.properties')->find($char_id);
+        return Character::find($char_id)->items();
     }
 
 }
