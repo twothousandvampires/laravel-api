@@ -75,15 +75,16 @@ class ItemService{
         $item = Item::create($item_data);
 
 
-        $prop = GemPropertiesList::where('gem_type', $base['subclass'])->where('type','parent')->inRandomOrder()->first();
-
-
-            GemProperties::create(['item_id' => $item->id,
-                'name' => $prop->name,
-                'level' => 1,
-                'exp_needed' => $prop->exp_needed,
-                'description' => $prop->description,
-                'type' => $prop->type]);
+//
+//        $prop = GemPropertiesList::where('gem_type', 'like', '%' . $base['subclass'] . '%')->where('type','parent')->inRandomOrder()->first();
+//
+//
+//        GemProperties::create(['item_id' => $item->id,
+//            'name' => $prop->name,
+//            'level' => 1,
+//            'exp_needed' => $prop->exp_needed,
+//            'description' => $prop->description,
+//            'type' => $prop->type]);
 
 
         return Item::find($item->id)->props();
