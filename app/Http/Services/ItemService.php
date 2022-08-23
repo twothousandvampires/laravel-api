@@ -43,7 +43,7 @@ class ItemService{
         if($char_id){
             $item_data['char_id'] = $char_id;
         }
-        $item_data['slot'] = min($this->inv_service->getFreeSlots($char_id));
+        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
         $rarity = self::RARITY[random_int(0,3)];
         $item_data['quality'] = $rarity;
         $base = ItemsList::inRandomOrder()->select('name','type','class','price','img_path','subclass')->first()->toArray();
@@ -59,7 +59,7 @@ class ItemService{
                                 'stat' => $prop->stat]);
         }
 
-        return Item::with('properties')->find($item->id);
+        return Item::find($item->id)->props();
     }
 
     public function createRandomGem($char_id = false){
@@ -68,23 +68,33 @@ class ItemService{
             $item_data['char_id'] = $char_id;
         }
 
-        $item_data['slot'] = min($this->inv_service->getFreeSlots($char_id));
+        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
         $base = ItemsList::inRandomOrder()->where('type','skill_gem')->select('name','type','class','price','img_path','subclass')->first()->toArray();
+        $item = Item::create(array_merge($item_data, $base));
 
-        $item_data = array_merge($item_data, $base);
-        $item = Item::create($item_data);
+        $prop = null;
+        switch ($base['class']){
+            case 'combat':
+                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
+                break;
+            case 'sorcery':
+                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
+                break;
+            case 'movement':
+                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
+                break;
+            case 'all':
+                $prop = GemPropertiesList::where('type','parent')->inRandomOrder()->first();
+                break;
 
+        }
 
-//
-//        $prop = GemPropertiesList::where('gem_type', 'like', '%' . $base['subclass'] . '%')->where('type','parent')->inRandomOrder()->first();
-//
-//
-//        GemProperties::create(['item_id' => $item->id,
-//            'name' => $prop->name,
-//            'level' => 1,
-//            'exp_needed' => $prop->exp_needed,
-//            'description' => $prop->description,
-//            'type' => $prop->type]);
+        GemProperties::create(['item_id' => $item->id,
+            'name' => $prop->name,
+            'level' => 1,
+            'exp_needed' => $prop->exp_needed,
+            'description' => $prop->description,
+            'type' => $prop->type]);
 
 
         return Item::find($item->id)->props();
@@ -117,13 +127,12 @@ class ItemService{
 
         $r = random_int(0,100);
 
-//        if($r < 50){
-//            return $this->createRandomWeapon($char_id);
-//        }
-//        else {
-//            return $this->createRandomUsed($char_id);
-//        }
-        return $this->createRandomGem($char_id);
+        if($r < 50){
+            return $this->createRandomWeapon($char_id);
+        }
+        else {
+            return $this->createRandomGem($char_id);
+        }
     }
 
     public function use(Request $request, $item, $character){

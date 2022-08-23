@@ -15,17 +15,13 @@ class InventoryService{
 
     public function getFreeSlots($char_id){
 
-        $ids = Item::where('char_id', $char_id)->where('slot', '>', 9)->where('slot', '<', 31)->get()->pluck('slot')->toArray();
+        $ids = Item::where('char_id', $char_id)->where('slot', '>', 8)->where('slot', '<', 29)->get()->pluck('slot')->toArray();
 
-        $result = [];
-
-        for($i = 10; $i < 31; $i++){
+        for($i = 9; $i < 29; $i++){
             if(!in_array($i,$ids)){
-                $result[] = $i;
+                return $i;
             }
         }
-
-        return $result;
     }
 
 }
