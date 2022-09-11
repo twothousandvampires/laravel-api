@@ -41,9 +41,7 @@ class CharacterController extends BaseController
         $char->x = 0;
         $char->y = 0;
         $char->save();
-        SkillTreeModel::make($char->id);
         $this->node_service->generateSingleNode(0,0,4,$char->id);
-
         return $this->sendResponse($char, 'Successfully.');
     }
 

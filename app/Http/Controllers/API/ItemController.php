@@ -70,20 +70,8 @@ class ItemController extends BaseController
 
     public function delete(Request $request){
 
-        switch ($request->type){
-            case 'weapon':
-                $item = Weapon::find($request->id);
-                $item->delete();
-                break;
-            case 'armour':
-                $item = Armour::find($request->id);
-                $item->delete();
-                break;
-            case 'used':
-                $item = Used::find($request->id);
-                $item->delete();
-                break;
-        }
+        $item = Item::find($request->id);
+        $item->delete();
 
         return $this->sendResponse([], 'Successfully.');
     }

@@ -94,7 +94,8 @@ class ItemService{
             'level' => 1,
             'exp_needed' => $prop->exp_needed,
             'description' => $prop->description,
-            'type' => $prop->type]);
+            'type' => $prop->type,
+            'order_by' =>$prop->order_by]);
 
 
         return Item::find($item->id)->props();

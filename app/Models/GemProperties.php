@@ -12,5 +12,5 @@ class GemProperties extends Model
     public $timestamps = false;
     protected $table = 'gem_properties';
 
-    protected $fillable = ['item_id','level','name','description','type','exp_needed'];
+    protected $fillable = ['item_id','level','name','description','type','exp_needed','order_by'];
 }
