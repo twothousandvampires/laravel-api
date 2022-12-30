@@ -21,11 +21,13 @@ use App\Http\Controllers\API\ItemController;
 
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
-
+Route::get('item', [ItemController::class, 'getList']);
 
 Route::middleware('auth:api')->group( function () {
     Route::post('logout', [RegisterController::class, 'logout']);
     Route::post('character/create/', [CharacterController::class, 'create']);
+    Route::get('character/get/{chat_id}', [CharacterController::class, 'get']);
+    Route::get('character/torch/{chat_id}', [CharacterController::class, 'useTorch']);
     Route::post('user',[UserController::class, 'getUser'] )->middleware('cors');
     Route::post('character/{char_id}/world',[CharacterController::class, 'world']);
     Route::post('character/win/',[CharacterController::class, 'win']);
@@ -34,6 +36,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('item/change/',[ItemController::class, 'change']);
     Route::post('item/create/',[ItemController::class, 'create']);
     Route::post('item/delete/',[ItemController::class, 'delete']);
+    Route::delete('item/delete_all/',[ItemController::class, 'deleteAll']);
     Route::post('item/use/{id}',[ItemController::class, 'use']);
 });
 

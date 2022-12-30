@@ -46,7 +46,7 @@ class ItemService{
         $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
         $rarity = self::RARITY[random_int(0,3)];
         $item_data['quality'] = $rarity;
-        $base = ItemsList::inRandomOrder()->select('name','type','class','price','img_path','subclass')->first()->toArray();
+        $base = ItemsList::where('type','equip')->inRandomOrder()->select('name','type','class','price','img_path','subclass')->first()->toArray();
         $item_data = array_merge($item_data, $base);
 
         $item = Item::create($item_data);
@@ -124,16 +124,40 @@ class ItemService{
         return Item::with('properties')->find($item->id);
     }
 
+    public function createByName($char_id = false, $item_name){
+        $item_data = [];
+        if($char_id){
+            $item_data['char_id'] = $char_id;
+        }
+        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
+        $rarity = self::RARITY[random_int(0,3)];
+        $item_data['quality'] = $rarity;
+        $base = ItemsList::where('type','equip')->where('name', $item_name)->select('name','type','class','price','img_path','subclass')->first()->toArray();
+        $item_data = array_merge($item_data, $base);
+
+        $item = Item::create($item_data);
+        $property = EquipPropertiesList::where('item_name', $base['name'])->select($rarity,'stat','name')->get();
+
+        foreach ($property as $prop){
+            Property::create(['item_id' => $item->id,
+                'name' => $prop->name,
+                'value' => $prop[$rarity],
+                'stat' => $prop->stat]);
+        }
+
+        return Item::find($item->id)->props();
+    }
+
     public function createRandomItem($char_id = false){
 
-        $r = random_int(0,100);
-
-        if($r < 50){
-            return $this->createRandomWeapon($char_id);
-        }
-        else {
-            return $this->createRandomGem($char_id);
-        }
+//        $r = random_int(0,100);
+        return $this->createRandomWeapon($char_id);
+//        if($r < 50){
+//
+//        }
+//        else {
+//            return $this->createRandomGem($char_id);
+//        }
     }
 
     public function use(Request $request, $item, $character){

@@ -39,4 +39,9 @@ class Character extends Model
         return $this;
     }
 
+    public function addExp($node){
+        foreach ( json_decode($node->content_count) as $enemy ){
+            $this->xp += $enemy->exp_gain * $enemy->count;
+        }
+    }
 }

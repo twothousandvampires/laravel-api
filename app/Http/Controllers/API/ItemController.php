@@ -7,6 +7,7 @@ use App\Http\Services\ItemService;
 use App\Http\Services\NodeService;
 use App\Models\Character;
 use App\Models\Item;
+use App\Models\ItemsList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,11 +60,17 @@ class ItemController extends BaseController
     }
 
 
-
+    public function getList(){
+        return ItemsList::all()->pluck('name');
+    }
 
     public function create(Request $request){
-
-        $item = $this->item_service->createRandomItem($request->char_id);
+        if($request->item_name){
+            $item = $this->item_service->createByName($request->char_id, $request->item_name);
+        }
+        else{
+            $item = $this->item_service->createRandomItem($request->char_id);
+        }
         return $this->sendResponse(['item' => $item], 'Successfully.');
 
     }
@@ -74,6 +81,14 @@ class ItemController extends BaseController
         $item->delete();
 
         return $this->sendResponse([], 'Successfully.');
+    }
+
+    public function deleteAll(Request $request){
+        $character = $this->isOwner($request->char_id);
+        if($character){
+            Item::where('char_id', $character->id)->delete();
+            return $this->sendResponse('Successfully.');
+        }
     }
 
     public function use(Request $request, $item_id){

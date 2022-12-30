@@ -6,22 +6,10 @@ use App\Models\Enemy;
 
 class NodeService{
 
-    /**
-     * @var \string[][]
-     */
-    private $nomenclature_types;
-    protected $enemy_types = [
-        'undying squad'
-    ];
+    public $node_content_service;
 
     function __construct(){
-        $this->nomenclature_types = [
-            ['N','NT','KOP'],
-            ['JS','JSS','Q'],
-            ['OP','POS','OPP'],
-            ['32P','3','1'],
-            ['Home','Hearth','Centro'],
-        ];
+        $this->node_content_service = new NodeContentService();
     }
 
     public function checkNode($x, $y, $arr){
@@ -31,8 +19,19 @@ class NodeService{
                 return $item->id;
             }
         }
-
         return false;
+    }
+
+    public function torch($character){
+
+        $node = Node::where('char_id',$character->id)
+                        ->where('x',$character->x)
+                        ->where('y',$character->y)
+                        ->first();
+
+        $node->light = 1;
+        $node->save();
+
     }
 
     public function checkWay($x, $y, $parent_id, $arr){
@@ -56,10 +55,12 @@ class NodeService{
     }
 
     public function checkFrame($char_x, $char_y, $x , $y){
+
         if($x > $char_x + 6 || $x < $char_x - 6 || $y > $char_y + 6 || $y < $char_y - 6 ){
             return false;
         }
         return true;
+
     }
 
     public function generateSingleNode($x, $y, $links, $char_id){
@@ -69,9 +70,8 @@ class NodeService{
         $node->y = $y;
         $node->links = $links;
         $node->char_id = $char_id;
-        $node->type = 4;
         $node->visited = 1;
-        $node->content_type = 'city';
+        $node->type = Node::TYPE_EMPTY;
         $node->save();
 
     }
@@ -163,23 +163,20 @@ class NodeService{
             $type = random_int(0,100);
 
             if($type >= 90){
-                $new_node->type = 1;
-                $new_node->content_type = $this->enemy_types[0];
-                $new_node->content_count = json_encode($this->generateGroup($new_node->content_type));
-                $new_node->map = json_encode($this->generateMap());
+                $new_node->type = Node::TYPE_ENEMY;
             }
 
             else if($type > 80){
-                $new_node->type = 2;
-                $new_node->content_count = json_encode(random_int(1,3));
-                $new_node->content_type = 'treasure';
+                $new_node->type = Node::TYPE_TREASURE;
             }
 
             else{
-                $new_node->type = 0;
+                $new_node->type = Node::TYPE_EMPTY;
             }
 
-            $new_node->save();
+            if($new_node->save()){
+                $this->node_content_service->createContent($new_node);
+            }
 
             // reduce link potential
             $parent->links -= 1;
@@ -187,48 +184,18 @@ class NodeService{
 
             // if node cannot link, remove them
 
-
             // push
+
             $nodes_to_link->push($new_node);
             $all->push($new_node);
         }
 
         for($i = 0;$i < $all->count();$i++){
             if ( abs($char->x - $all[$i]->x) <=1 && abs($char->y - $all[$i]->y) <= 1 && !$all[$i]->visited){
-                $all[$i]->visited = 1;
                 $all[$i]->save();
             }
         }
 
-
         return $all->toArray();
-    }
-
-    public function generateGroup($type){
-
-        switch ($type){
-            case 'undying squad':
-                $group = [];
-                $warriors = Enemy::where('name','=','skeleton warrior')->first();
-                $warriors->count = random_int(10,15);
-                $group[] = $warriors;
-
-                $archers = Enemy::where('name', '=', 'skeleton archer')->first();
-                $archers->count = random_int(5,10);
-                $group[] = $archers;
-
-                $mages = Enemy::where('name', '=', 'skeleton mage')->first();
-                $mages->count = random_int(2,5);
-                $group[] = $mages;
-
-                return $group;
-        }
-    }
-
-    public function generateMap(){
-        $map = json_decode('{}');
-        $map->width  = random_int(600,900);
-        $map->height = random_int(600,900);
-        return $map;
     }
 }
