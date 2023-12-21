@@ -1,16 +1,10 @@
 <?php
 namespace App\Models;
 
-use App\Models\Item;
-use App\Models\Skill;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
 
 class Character extends Model
 {
-    use HasFactory;
-
     private $max_inv = 20;
 
     public $timestamps = false;
@@ -20,28 +14,20 @@ class Character extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'detail','user_id'
+        'name', 'detail','user_id','x','y'
     ];
 
-    static function getFreeInvSlots($char_id){
-        $free = [];
-        $weapon = Weapon::where('char_id',$char_id)->
-                whereNotNull('inv_slot')->get()->pluck('inv_slot')->toArray();
-        return array_merge($free, $weapon);
-    }
-
-    public function items()
+    public function getItems()
     {
-        $this->items = $this->hasMany(Item::class,'char_id','id')->get();
-        foreach ($this->items as $item){
-            $item = $item->props();
-        }
+        $this->items = $this->hasMany(Item::class,'char_id','id')->get()
+        ->map(function ($item){
+            return $item->details();
+        });
         return $this;
     }
 
-    public function addExp($node){
-        foreach ( json_decode($node->content_count) as $enemy ){
-            $this->xp += $enemy->exp_gain * $enemy->count;
-        }
+    public function addExp($exp_count){
+       $this->exp += $exp_count;
+       $this->save();
     }
 }

@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class GemPropertiesList extends Model
+class GemPropertyList extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = 'gem_properties_list';
+    protected $table = 'gem_property_list';
 
 }

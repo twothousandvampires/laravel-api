@@ -45,7 +45,7 @@ class Node extends Model
         return $res;
     }
     static public function getNodeByCoord($x , $y ,$char_id){
-        $node = Node::where('x',$x)->where('y',$y)->where('char_id',$char_id)->first();
+        $node = Node::with('content')->where('x',$x)->where('y',$y)->where('char_id',$char_id)->first();
         return $node;
     }
 

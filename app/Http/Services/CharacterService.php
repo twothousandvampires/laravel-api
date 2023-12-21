@@ -2,18 +2,18 @@
 
 namespace App\Http\Services;
 use App\Models\Character;
-use App\Http\Services\InventoryService;
-use App\Models\SkillTreeModel;
+use Illuminate\Support\Facades\Auth;
 
 class CharacterService{
 
-    function __construct(){
-        $this->inventory_service = new InventoryService();
+    public function createCharacter($req, NodeService $nodeService){
+        $char = new Character();
+        $char->name = $req->name;
+        $char->user_id = Auth::user()->id;
+        $char->x = 0;
+        $char->y = 0;
+        $char->save();
+        $nodeService->generateSingleNode(0,0,4,$char->id);
+        return $char;
     }
-
-    public function componateCharacter($char_id): object
-    {
-        return Character::find($char_id)->items();
-    }
-
 }

@@ -1,138 +1,127 @@
 <?php
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController;
 use App\Http\Services\CharacterService;
 use App\Http\Services\ItemService;
+use App\Http\Services\NodeContentService;
 use App\Http\Services\NodeService;
 use App\Models\Item;
-use App\Models\SkillTreeModel;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Character;
 use App\Models\Node;
-use App\Models\SkillTree;
+use Illuminate\Http\Request;
 
 class CharacterController extends BaseController
 {
 
-    public $node_service;
-    public $item_service;
-    private $character_service;
-
-    function __construct()
-    {
-        $this->node_service = new NodeService();
-        $this->item_service = new ItemService();
-        $this->character_service = new CharacterService();
-    }
-
-    private function isOwner($char_id){
-        $character = Character::find($char_id);
-        if($character->user_id === Auth::user()->id){
-            return $character;
-        }
-        return false;
-    }
-
-    public function useTorch($char_id){
-        $character = $this->isOwner($char_id);
-        if($character){
-            $this->node_service->torch($character);
-        }
-    }
+    //to do
+//    public function useTorch($char_id){
+//        $this->node_service->torch($character);
+//    }
 
     public function get($char_id){
-        $char = $this->character_service->componateCharacter($char_id);
+        $character = Character::find($char_id)->getItems();
+        return $this->sendResponse($character, 'Successfully.');
+    }
+
+    public function create(Request $request, CharacterService $characterService){
+        $char = $characterService->createCharacter($request, new NodeService());
         return $this->sendResponse($char, 'Successfully.');
     }
 
-    public function create(Request $request){
-        $char = new Character();
-        $char->name = $request->name;
-        $char->user_id = Auth::user()->id;
-        $char->x = 0;
-        $char->y = 0;
-        $char->save();
-        $this->node_service->generateSingleNode(0,0,4,$char->id);
-        return $this->sendResponse($char, 'Successfully.');
-    }
+    public function world($char_id, NodeService $nodeService){
 
-    public function world($char_id){
-        $character = $this->isOwner($char_id);
-        if($character){
-            $char = $this->character_service->componateCharacter($char_id);
-            $nodes = $this->node_service->generateNodes($char);
-            return $this->sendResponse($nodes);
+        $character = Character::find($char_id)->items();
+        $nodes = $nodeService->generateNodes($character);
+        if($character && $nodes){
+            return $this->sendResponse($nodes, 'Successfully.');
         }
+
         return $this->sendError('something went wrong.');
     }
 
     public function delete($char_id){
-            $character = $this->isOwner($char_id);
-            if($character){
-                $character->delete();
-                return $this->sendResponse(true,'Successfully.');
-            }
-            return $this->sendError('Character not found.');
+
+        $character = Character::find($char_id)->items();
+        if( $character->delete()){
+            return $this->sendResponse(true,'Successfully.');
+        }
+
+        return $this->sendError('Character not found.');
     }
 
-    public function move(Request $request, $char_id){
-        $character = $this->isOwner($char_id);
+    public function set($id, Request $request){
+
+        $character = Character::find($id);
         if($character){
-            $new_node = Node::getNodeByCoord($request->x,$request->y,$char_id);
-            switch ($new_node->type){
-                case 1:
-                    $character->x = $request->x;
-                    $character->y = $request->y;
-                    $character->save();
-                    return $this->sendResponse(['node'=>$new_node,'node_type'=>1]);
-                case 4:
-                    $character->x = $request->x;
-                    $character->y = $request->y;
-                    $character->save();
-                    $nodes = $this->node_service->generateNodes($character);
-                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$character,'node_type'=>4]);
-                case 2:
-                    $character->x = $request->x;
-                    $character->y = $request->y;
-                    $character->save();
-                    $item = $this->item_service->createRandomItem($character->id);
-                    if(!$item->slot){
-                        Item::find($item->id)->delete();
-                    }
-                    $new_node->content_type = null;
-                    $new_node->type = 0;
-                    $new_node->save();
-                    $nodes = $this->node_service->generateNodes($character);
-                    return $this->sendResponse(['nodes'=>$nodes,'char'=>$character,'node_type'=>2, 'item' =>$item]);
-                default :
-                    $character->x = $request->x;
-                    $character->y = $request->y;
-                    $character->save();
-                    $new_node->save();
-                    $nodes = $this->node_service->generateNodes($character);
-                    return $this->sendResponse(['nodes'=>$nodes,'node_type'=>0]);
-            }
+            $character->life = $request->life;
+            $character->mana = $request->mana;
+            $character->dead = $request->dead;
+            $character->save();
         }
     }
 
-    public function win(Request $request){
-        $character = $this->isOwner($request->char_id);
-        if($character){
-            try{
-                $node = Node::getNodeByCoord($character->x,$character->y,$character->id);
-                $node->type = 0;
-                $character->addExp($node);
+    public function move(Request $request, $char_id, NodeService $nodeService, ItemService $itemService){
+
+        $character = Character::find($char_id);
+        $new_node = Node::getNodeByCoord($request->x,$request->y,$char_id);
+
+        switch ($new_node->type) {
+            case 1:
+                $character->update([
+                    'x' =>  $request->x,
+                    'y' =>  $request->y,
+                ]);
+                return $this->sendResponse(['node' => $new_node, 'node_type' => 1]);
+            case 4:
+                $character->x = $request->x;
+                $character->y = $request->y;
                 $character->save();
-                $node->content_type = null;
-                $node->save();
-                $nodes = $this->node_service->generateNodes($character);
-                return $this->sendResponse(['nodes'=>$nodes,'char'=>$character,'node_type'=>0], 'Successfully.');
-            }
-            catch (\Exception $e){
-                return $e;
-            }
+                $nodes = $nodeService->generateNodes($character);
+                return $this->sendResponse(['nodes' => $nodes, 'char' => $character, 'node_type' => 4]);
+            case 2:
+                $character->x = $request->x;
+                $character->y = $request->y;
+                $character->save();
+                $node_content = $new_node->content()->first();
+                $item = $itemService->createItemFromTreasure($char_id, $node_content->content_type);
+                if (!$item->slot) {
+                    Item::find($item->id)->delete();
+                }
+                $new_node->type = 0;
+                $new_node->save();
+                $nodes = $nodeService->generateNodes($character);
+                return $this->sendResponse(['nodes' => $nodes,
+                    'char' => $character, 'node_type' => 2,
+                    'item' => $item->slot ? $item : false]);
+            default :
+                $character->update([
+                    'x' =>  $request->x,
+                    'y' =>  $request->y,
+                ]);
+                $nodes = $nodeService->generateNodes($character);
+                return $this->sendResponse(['nodes' => $nodes,'node_type' => 0]);
+//            }
+
         }
+    }
+
+    public function win($char_id, NodeContentService $nodeContentService, NodeService $node_service){
+        $character = Character::find($char_id);
+        try {
+            $node = Node::getNodeByCoord($character->x, $character->y, $character->id);
+            $node->type = 0;
+            $node->save();
+            $character->addExp($nodeContentService->calcExp($node));
+            $node_content = $node->content()->first();
+            $node_content->content_type = 0;
+            $node_content->save();
+
+            $nodes = $node_service->generateNodes($character);
+            return $this->sendResponse(['nodes'=>$nodes,'char'=>$character->items(),'node_type'=>0], 'Successfully.');
+        }
+        catch (\Exception $e){
+            return $e;
+        }
+
     }
 }

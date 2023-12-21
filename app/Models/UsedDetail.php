@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ItemsList extends Model
+class UsedDetail extends Model
 {
 
     use HasFactory;
-    protected $table = 'game_data.item_list';
+    protected $table = 'game_serve.used_details';
 
 }
 

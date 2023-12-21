@@ -6,9 +6,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Validator;
-use Laravel\Passport\RefreshToken;
-use Laravel\Passport\Token;
 
 class RegisterController extends BaseController
 {
@@ -19,7 +16,7 @@ class RegisterController extends BaseController
      */
     public function register(Request $request)
     {
-        
+
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email',
@@ -34,11 +31,10 @@ class RegisterController extends BaseController
 
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
-        $user = User::create($input);
-        $success['token'] =  '';
-        $success['name'] =  '';
+        User::create($input);
 
-        return $this->sendResponse($success, 'User register successfully.');
+
+        return $this->sendResponse(['msg'=>'User register successfully.']);
     }
 
     /**
@@ -63,9 +59,11 @@ class RegisterController extends BaseController
 
     public function logout(Request $request)
     {
-        $accessToken = auth()->user()->token();
-        $token= $request->user()->tokens->find($accessToken);
-        $token->revoke();
+        if(auth()->user()){
+            $accessToken = auth()->user()->token();
+            $token= $request->user()->tokens->find($accessToken);
+            $token->revoke();
+        }
         return response(['message' => 'You have been successfully logged out.'], 200);
     }
 }

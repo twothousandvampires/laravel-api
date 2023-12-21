@@ -2,28 +2,58 @@
 
 namespace App\Models;
 
-use App\Models\Property;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\GemProperties;
-
 
 class Item extends Model
 {
-    use HasFactory;
-    public $timestamps = false;
+    public $timestamps = true;
+    const RARITY= [
+        1 => 'common',
+        2 => 'uncommon',
+        3 => 'rare',
+        4 => 'legendary'
+    ];
 
-    protected $fillable = ['char_id','name','slot','type','class','price','img_path','subclass','quality'];
+    const QUALITY = [
+        1 => 'low',
+        2 => 'normal',
+        3 => 'good',
+        4 => 'masterpiece'
+    ];
 
-    public function props(){
+    const ITEM_TYPE_EQUIP = 1;
+    const ITEM_TYPE_GEM = 2;
+    const ITEM_TYPE_USED = 3;
+
+    const GEM_CLASS_SORCERY = 2;
+    const GEM_CLASS_COMBAT = 1;
+    const GEM_CLASS_MOVEMENT = 3;
+    const GEM_CLASS_ALL = 4;
+
+    const GEM_TYPE_ACTIVE = 1;
+    const GEM_TYPE_PASSIVE = 2;
+    const GEM_TYPE_ALL = 3;
+
+
+    protected $fillable = ['char_id','name','slot','type','rarity'];
+
+    protected $guarded = ['details'];
+    public function details(){
         switch ($this->type){
-            case 'skill_gem':
-                $this->properties = $this->hasMany(GemProperties::class,'item_id','id')->get();
+            case self::ITEM_TYPE_USED:
+                $this->details = $this->hasOne(UsedDetail::class,'item_id','id')->get();
                 break;
-            case 'equip':
-                $this->properties = $this->hasMany(Property::class,'item_id','id')->get();
+            case self::ITEM_TYPE_GEM:
+                $this->details = $this->hasOne(GemDetail::class,'item_id','id')->first();
+                $this->props = $this->hasMany(GemProperties::class,'item_id','id')->get();
+                $this->skill = $this->hasOne(GemSkills::class,'item_id','id')->first()->children();
+                break;
+            case self::ITEM_TYPE_EQUIP:
+                $this->details = $this->hasOne(EquipDetail::class,'item_id','id')->first();
+                $this->props = $this->hasMany(Property::class,'item_id','id')->get();
                 break;
         }
         return $this;
     }
+
 }

@@ -2,64 +2,114 @@
 
 namespace App\Http\Services;
 
+use App\Models\EquipDetail;
+use App\Models\EquipDetailList;
+use App\Models\GemDetail;
+use App\Models\GemDetailList;
 use App\Models\GemProperties;
-use App\Models\GemPropertiesList;
+use App\Models\GemPropertyList;
+use App\Models\GemSkills;
 use App\Models\ItemsList;
 use App\Models\Item;
 use App\Models\EquipPropertiesList;
-use App\Models\BookPropertiesList;
+use App\Models\NodeContent;
 use App\Models\Property;
-use App\Models\SecondarySkill;
-use App\Models\SecondarySkillsList;
 use Illuminate\Http\Request;
-use App\Models\Skill;
-use App\Models\SkillsList;
-use App\Models\SkillPropertiesList;
-use App\Models\SkillProperties;
-
-ini_set('display_errors',1);
+use App\Models\GemSkillList;
 
 class ItemService{
 
-    const RARITY= [
-        0 => 'low',
-        1 => 'normal',
-        2 => 'rare',
-        3 => 'masterpiace'
-    ];
-
+    const GEM_TYPE_ALL = 'all';
 
     public $inv_service;
 
     function __construct()
     {
         $this->inv_service = new InventoryService();
-        $this->skill_service = new SkillService();
     }
 
-    public function createRandomWeapon($char_id = false){
+    public function createItemFromTreasure($char_id, $node_content_type){
+        if($node_content_type === NodeContent::TREASURE_TYPE_CHEST){
+            return $this->createRandomItem($char_id);
+        }
+        elseif ($node_content_type === NodeContent::TREASURE_TYPE_SCROLL){
+            return $this->createRandomScroll($char_id);
+        }
+    }
+    public function createRandomScroll($char_id){
+        $item_data = [];
+
+        if($char_id){
+            $item_data['char_id'] = $char_id;
+        }
+
+        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
+
+        //generate quality
+        $quality = mt_rand(1,4);
+
+        $item_data['quality'] = $quality;
+
+        $base = ItemsList::where('type', Item::ITEM_TYPES_SCROLL)
+                        ->inRandomOrder()
+                        ->select('name','type','class','subclass','rarity')
+                        ->first()
+                        ->toArray();
+
+        $item_data = array_merge($item_data, $base);
+
+        $item = Item::create($item_data);
+
+        return Item::find($item->id)->details();
+    }
+    public function createRandomEquip($char_id = false, $name = null){
 
         $item_data = [];
         if($char_id){
             $item_data['char_id'] = $char_id;
         }
+
         $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
-        $rarity = self::RARITY[random_int(0,3)];
-        $item_data['quality'] = $rarity;
-        $base = ItemsList::where('type','equip')->inRandomOrder()->select('name','type','class','price','img_path','subclass')->first()->toArray();
+
+        $quality = mt_rand(1,4);
+
+        $item_data['quality'] = $quality;
+
+
+        $base = ItemsList::where('type', Item::ITEM_TYPE_EQUIP)
+                ->inRandomOrder()
+                ->select('id','name', 'type', 'rarity')
+                ->first()
+                ->toArray();
+
+
+
         $item_data = array_merge($item_data, $base);
 
         $item = Item::create($item_data);
-        $property = EquipPropertiesList::where('item_name', $base['name'])->select($rarity,'stat','name')->get();
 
+        $detail_base = EquipDetailList::where('item_list_id',$base['id'])->first();
+
+        $datails = EquipDetail::create([
+            'item_id' => $item->id,
+            'equip_type' => $detail_base->equip_type,
+            'equip_class' => $detail_base->equip_class,
+            'equip_quality' => $quality]);
+
+
+        $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality], 'stat' , 'name' , 'prop_type')->get();
+
+
+        var_dump($property);die;
         foreach ($property as $prop){
             Property::create(['item_id' => $item->id,
-                                'name' => $prop->name,
-                                'value' => $prop[$rarity],
-                                'stat' => $prop->stat]);
+                              'name' => $prop->name,
+                              'value' => $prop[ITEM::QUALITY[$quality]],
+                              'stat' => $prop->stat,
+                              'prop_type' => $prop->prop_type]);
         }
 
-        return Item::find($item->id)->props();
+        return Item::find($item->id)->details();
     }
 
     public function createRandomGem($char_id = false){
@@ -68,37 +118,61 @@ class ItemService{
             $item_data['char_id'] = $char_id;
         }
 
+        $quality = mt_rand(1,4);
+
         $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
-        $base = ItemsList::inRandomOrder()->where('type','skill_gem')->select('name','type','class','price','img_path','subclass')->first()->toArray();
+
+        $base = ItemsList::inRandomOrder()
+                            ->where('type',Item::ITEM_TYPE_GEM)
+                            ->select('id','name','type','rarity')
+                            ->first()
+                            ->toArray();
+
         $item = Item::create(array_merge($item_data, $base));
 
-        $prop = null;
-        switch ($base['class']){
-            case 'combat':
-                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
-                break;
-            case 'sorcery':
-                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
-                break;
-            case 'movement':
-                $prop = GemPropertiesList::where('gem_type', $base['class'])->where('type','parent')->inRandomOrder()->first();
-                break;
-            case 'all':
-                $prop = GemPropertiesList::where('type','parent')->inRandomOrder()->first();
-                break;
+        $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
 
+        $datails = GemDetail::create([
+            'item_id' => $item->id,
+            'gem_type' => $detail_base->gem_type,
+            'gem_class' => $detail_base->gem_class,
+            'gem_quality' => $quality]);
+
+        $props = GemPropertyList::where('item_name', $item->name)
+                                ->select(ITEM::QUALITY[$quality],'prop_name')
+                                ->get();
+
+        foreach ($props as $prop){
+            GemProperties::create(['item_id' => $item->id,
+                'name' => $prop->prop_name,
+                'value' => $prop[ITEM::QUALITY[$quality]],
+            ]);
         }
 
-        GemProperties::create(['item_id' => $item->id,
-            'name' => $prop->name,
-            'level' => 1,
-            'exp_needed' => $prop->exp_needed,
-            'description' => $prop->description,
-            'type' => $prop->type,
-            'order_by' =>$prop->order_by]);
+        $skill_query = GemSkillList::query();
+
+        if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
+            $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
+        }
+
+        if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
+            $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
+        }
+
+        $skill = $skill_query->inRandomOrder()->first();
+
+        GemSkills::create([
+            'item_id' => $item->id,
+            'name' => $skill->name,
+            'skill_type' => $skill->gem_type,
+            'skill_class' => $skill->gem_class,
+            'exp_needed' => $skill->exp_needed,
+            'max_level' => $skill->max_level,
+            'level' => 1
+        ]);
 
 
-        return Item::find($item->id)->props();
+        return Item::find($item->id)->details();
     }
 
     public function createRandomUsed($char_id = false){
@@ -124,40 +198,107 @@ class ItemService{
         return Item::with('properties')->find($item->id);
     }
 
-    public function createByName($char_id = false, $item_name){
+    public function createByName($item_name, InventoryService $inventoryService, $char_id = false){
+
+
         $item_data = [];
         if($char_id){
             $item_data['char_id'] = $char_id;
         }
-        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
-        $rarity = self::RARITY[random_int(0,3)];
-        $item_data['quality'] = $rarity;
-        $base = ItemsList::where('type','equip')->where('name', $item_name)->select('name','type','class','price','img_path','subclass')->first()->toArray();
+
+        $item_data['slot'] = $inventoryService->getFreeSlots($char_id);
+
+        $quality = mt_rand(1,4);
+
+        $item_data['quality'] = $quality;
+
+        $base = ItemsList::where('name', $item_name)
+                        ->select('id','name','type','rarity')
+                        ->first()
+                        ->toArray();
+
         $item_data = array_merge($item_data, $base);
 
         $item = Item::create($item_data);
-        $property = EquipPropertiesList::where('item_name', $base['name'])->select($rarity,'stat','name')->get();
 
-        foreach ($property as $prop){
-            Property::create(['item_id' => $item->id,
-                'name' => $prop->name,
-                'value' => $prop[$rarity],
-                'stat' => $prop->stat]);
+        if($item->type == Item::ITEM_TYPE_EQUIP){
+
+            $detail_base = EquipDetailList::where('item_list_id', $base['id'])->first();
+
+            $datails = EquipDetail::create([
+                'item_id' => $item->id,
+                'equip_type' => $detail_base->equip_type,
+                'equip_class' => $detail_base->equip_class,
+                'equip_quality' => $quality]);
+
+
+            $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality],'stat','name','prop_type','sub_type','inc_type')->get();
+
+            foreach ($property as $prop){
+                Property::create(['item_id' => $item->id,
+                    'name' => $prop->name,
+                    'value' => $prop[ITEM::QUALITY[$quality]],
+                    'stat' => $prop->stat,
+                    'prop_type' => $prop->prop_type,
+                    'sub_type' => $prop->sub_type,
+                    'inc_type' => $prop->inc_type]);
+            }
+
+        }
+        elseif($item->type == Item::ITEM_TYPE_GEM){
+
+            $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
+
+            $datails = GemDetail::create([
+                'item_id' => $item->id,
+                'gem_type' => $detail_base->gem_type,
+                'gem_class' => $detail_base->gem_class,
+                'gem_quality' => $quality]
+            );
+
+
+            $props = GemPropertyList::where('item_name', $item->name)
+                ->select([ITEM::QUALITY[$quality], 'prop_name'])
+                ->get();
+
+            foreach ($props as $prop){
+                GemProperties::create(['item_id' => $item->id,
+                                'prop_name' => $prop->prop_name,
+                                'value' => $prop[ITEM::QUALITY[$quality]],
+                ]);
+            }
+
+            $skill_query = GemSkillList::query();
+
+            if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
+                $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
+            }
+
+            if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
+                $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
+            }
+
+            $skill = $skill_query->inRandomOrder()->first();
+
+            GemSkills::create([
+                'item_id' => $item->id,
+                'name' => $skill->name,
+                'skill_type' => $skill->gem_type,
+                'skill_class' => $skill->gem_class,
+                'exp_needed' => $skill->exp_needed,
+                'level' => 1
+            ]);
+
         }
 
-        return Item::find($item->id)->props();
+        return Item::find($item->id)->details();
     }
 
     public function createRandomItem($char_id = false){
 
-//        $r = random_int(0,100);
-        return $this->createRandomWeapon($char_id);
-//        if($r < 50){
-//
-//        }
-//        else {
-//            return $this->createRandomGem($char_id);
-//        }
+
+        return $this->createRandomEquip($char_id);
+
     }
 
     public function use(Request $request, $item, $character){

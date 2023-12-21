@@ -2,15 +2,8 @@
 
 namespace App\Http\Services;
 use App\Models\Node;
-use App\Models\Enemy;
 
 class NodeService{
-
-    public $node_content_service;
-
-    function __construct(){
-        $this->node_content_service = new NodeContentService();
-    }
 
     public function checkNode($x, $y, $arr){
 
@@ -70,7 +63,6 @@ class NodeService{
         $node->y = $y;
         $node->links = $links;
         $node->char_id = $char_id;
-        $node->visited = 1;
         $node->type = Node::TYPE_EMPTY;
         $node->save();
 
@@ -78,6 +70,7 @@ class NodeService{
 
     public function generateNodes($char){
 
+        $node_content_service =  new NodeContentService();
         // node available to link (links != 0)
         $nodes_to_link = Node::getNodes($char->x,$char->y,$char->id,6,true);
 
@@ -174,15 +167,13 @@ class NodeService{
                 $new_node->type = Node::TYPE_EMPTY;
             }
 
-            if($new_node->save()){
-                $this->node_content_service->createContent($new_node);
-            }
+            $new_node->save();
+            $node_content_service->createContent($new_node);
+
 
             // reduce link potential
             $parent->links -= 1;
             $parent->save();
-
-            // if node cannot link, remove them
 
             // push
 
@@ -196,6 +187,6 @@ class NodeService{
             }
         }
 
-        return $all->toArray();
+        return  Node::getNodes($char->x,$char->y,$char->id,6);
     }
 }

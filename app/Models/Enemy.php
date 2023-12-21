@@ -9,6 +9,8 @@ class enemy extends Model
 {
     use HasFactory;
 
+    public const  ENEMY_TYPE_UNDEAD = 1;
+
     protected $table = 'enemies';
     public $timestamps = false;
 }

@@ -30,7 +30,14 @@ class NodeContentService
         }
         else if($node->type == Node::TYPE_TREASURE){
 
-            $node_content->content_type = NodeContent::TREASURE_TYPE_CHEST;
+            $rnd = random_int(0,100);
+            if($rnd >= 50){
+                $node_content->content_type = NodeContent::TREASURE_TYPE_CHEST;
+            }
+            else{
+                $node_content->content_type = NodeContent::TREASURE_TYPE_SCROLL;
+            }
+
 
         }
 
@@ -39,30 +46,27 @@ class NodeContentService
 
     public function generateGroup($type){
 
-        switch ($type){
-            case 1:
-                $group = [];
-                $warriors = Enemy::where('name', 'skeleton warrior')->first();
-                $warriors->count = random_int(1,1);
-                $group[] = $warriors;
-                $archers = Enemy::where('name', 'skeleton archer')->first();
-                $archers->count = random_int(1,1);
-                $group[] = $archers;
-                $mages = Enemy::where('name', 'skeleton mage')->first();
-                $mages->count = random_int(1,1);
-                $group[] = $mages;
-                $mages = Enemy::where('name', 'ghost')->first();
-                $mages->count = random_int(1,1);
-                $group[] = $mages;
-                $giant = Enemy::where('name', 'giant undead')->first();
-                $giant->count = random_int(1,1);
-                $group[] = $giant;
-                $lich = Enemy::where('name', 'lich')->first();
-                $lich->count = random_int(1,1);
-                $group[] = $lich;
+        $all = Enemy::leftJoin('enemy_types as et','enemies.type_id','=','et.id')
+                    ->where('enemies.type_id', $type)
+                    ->get();
 
-                return $group;
+        $group = [];
+
+        foreach ($all as $enemy){
+            if($enemy->chance >= random_int(0,100)){
+                $count = random_int($enemy->min_count, $enemy->max_count);
+                if($count){
+                    $squad = [
+                        'name' => $enemy->name,
+                        'count' => $count,
+                        'exp' => $enemy->exp_gain,
+                    ];
+                    $group[] = $squad;
+                }
+            }
         }
+
+        return $group;
     }
 
     public function generateMap(){
@@ -71,5 +75,14 @@ class NodeContentService
         $map->width  = $size;
         $map->height = $size;
         return $map;
+    }
+
+    public function calcExp($node){
+        $content = json_decode($node->content()->first()->content)->enemy;
+        $sum = 0;
+        foreach ($content as $squad){
+            $sum += $squad->count * $squad->exp;
+        }
+        return $sum;
     }
 }

@@ -18,3 +18,7 @@ use App\Http\Controllers\UIController;
 Route::get('/', [UIController::class, 'index'])->name('main');
 
 Route::get('/move/{direction}', [UIController::class, 'move']);
+
+Route::get('/broadcast' ,function (){
+    broadcast(new \App\Events\Hello());
+});
