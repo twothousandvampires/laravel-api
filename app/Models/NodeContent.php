@@ -20,7 +20,8 @@ class NodeContent extends Model
 
     ];
 
-    public function node(){
+    public function node(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(Node::class);
     }
 }

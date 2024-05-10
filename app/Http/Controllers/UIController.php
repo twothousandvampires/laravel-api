@@ -15,16 +15,9 @@ class UIController extends Controller
         $this->node_service = new NodeService();
         $this->item_service = new ItemService();
         $this->inv_service = new InventoryService();
-        $this->skill_service = new SkillService();
     }
 
     public function index(){
-        $r = \DB::select(\DB::raw('select * from game_serve.characters'));
-var_dump($r);
-    }
-
-    public function move($direction){
-
-
+        echo 1;
     }
 }

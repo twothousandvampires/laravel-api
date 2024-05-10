@@ -60,11 +60,12 @@ class ItemService{
 
         $item = Item::create($item_data);
 
-        return Item::find($item->id)->details();
+        return Item::find($item->id);
     }
     public function createRandomEquip($char_id = false, $name = null){
 
         $item_data = [];
+
         if($char_id){
             $item_data['char_id'] = $char_id;
         }
@@ -75,13 +76,11 @@ class ItemService{
 
         $item_data['quality'] = $quality;
 
-
         $base = ItemsList::where('type', Item::ITEM_TYPE_EQUIP)
                 ->inRandomOrder()
                 ->select('id','name', 'type', 'rarity')
                 ->first()
                 ->toArray();
-
 
 
         $item_data = array_merge($item_data, $base);
@@ -100,7 +99,6 @@ class ItemService{
         $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality], 'stat' , 'name' , 'prop_type')->get();
 
 
-        var_dump($property);die;
         foreach ($property as $prop){
             Property::create(['item_id' => $item->id,
                               'name' => $prop->name,
@@ -109,7 +107,7 @@ class ItemService{
                               'prop_type' => $prop->prop_type]);
         }
 
-        return Item::find($item->id)->details();
+        return Item::find($item->id);
     }
 
     public function createRandomGem($char_id = false){
@@ -132,7 +130,7 @@ class ItemService{
 
         $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
 
-        $datails = GemDetail::create([
+        GemDetail::create([
             'item_id' => $item->id,
             'gem_type' => $detail_base->gem_type,
             'gem_class' => $detail_base->gem_class,
@@ -159,7 +157,9 @@ class ItemService{
             $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
         }
 
-        $skill = $skill_query->inRandomOrder()->first();
+        $skill = $skill_query->inRandomOrder()
+                             ->where('active', 1)
+                             ->first();
 
         GemSkills::create([
             'item_id' => $item->id,
@@ -171,8 +171,7 @@ class ItemService{
             'level' => 1
         ]);
 
-
-        return Item::find($item->id)->details();
+        return Item::find($item->id);
     }
 
     public function createRandomUsed($char_id = false){
@@ -198,10 +197,12 @@ class ItemService{
         return Item::with('properties')->find($item->id);
     }
 
-    public function createByName($item_name, InventoryService $inventoryService, $char_id = false){
+    public function createByName($item_name, $char_id = false, $skill_name = false){
 
+        $inventoryService = new InventoryService();
 
         $item_data = [];
+
         if($char_id){
             $item_data['char_id'] = $char_id;
         }
@@ -270,15 +271,20 @@ class ItemService{
 
             $skill_query = GemSkillList::query();
 
-            if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
-                $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
+            if($skill_name){
+                $skill = $skill_query->where('name', $skill_name)->first();
             }
+            else{
+                if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
+                    $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
+                }
 
-            if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
-                $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
+                if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
+                    $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
+                }
+
+                $skill = $skill_query->inRandomOrder()->first();
             }
-
-            $skill = $skill_query->inRandomOrder()->first();
 
             GemSkills::create([
                 'item_id' => $item->id,
@@ -291,7 +297,7 @@ class ItemService{
 
         }
 
-        return Item::find($item->id)->details();
+        return Item::find($item->id);
     }
 
     public function createRandomItem($char_id = false){

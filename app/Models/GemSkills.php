@@ -2,17 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 use Illuminate\Database\Eloquent\Model;
 
 class GemSkills extends Model
 {
-    use HasFactory;
 
     protected $table = 'gem_skills';
-
-    public $timestamps = FALSE;
-
+    public $timestamps = false;
     protected $fillable = ['item_id','name','skill_type','exp_needed','level','skill_class'];
 
 

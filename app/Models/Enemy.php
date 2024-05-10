@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use phpseclib3\Crypt\DES;
 
 class enemy extends Model
 {
@@ -13,4 +14,5 @@ class enemy extends Model
 
     protected $table = 'enemies';
     public $timestamps = false;
+
 }

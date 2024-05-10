@@ -169,212 +169,201 @@ class ItemController extends BaseController
     }
 
     public function change(Request $request){
-        $from = Item::find($request->from)->details();
+        $from = Item::where('slot', $request->from)->first();
         $character = Character::find($from->char_id);
+        $to = Item::where('slot', $request->to)->first();
 
-        if($character){
+        if(!$character){
+            return 'char not found';
+        }
 
-            if($request->exchange){
-                $to = Item::find($request->to)->details();;
-                $temp_slot = $from->slot;
+        if($to){
+            $temp_slot = $from->slot;
 
+            if($from->slot <= 8){
+               $this->unequip($from, $character);
+            }
 
+            $from->slot = $to->slot;
 
-                if($from->slot <= 8){
-                   $this->unequip($from, $character);
+            if($from->slot <= 8){
+                $this->equip($from, $character);
+            }
+
+            $from->save();
+            if($to->slot <= 8){
+                $this->unequip($to, $character);
+            }
+
+            $to->slot = $temp_slot;
+
+            if($to->slot <= 8){
+                $this->equip($to, $character);
+            }
+
+            $to->save();
+
+        }
+        else{
+            if($from->slot <= 8){
+                $this->unequip($from, $character);
+            }
+
+            $from->slot = $request->to;
+
+            if($from->slot <= 8){
+                 $this->equip($from, $character);
+            }
+
+            $from->save();
+        }
+
+        $all = Item::where('char_id', $character->id)
+            ->whereBetween('slot',[0, 8])
+            ->get();
+
+        $rows = $this->checkRowsAndColums($all);
+
+        foreach ($all as $item){
+            if($rows['combat'] == 3){
+                if($item->details->equip_class == 1 && $item->slot < 3 && !$item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 1,
+                    ]);
                 }
-
-                $from->slot = $to->slot;
-
-                if($from->slot <= 8){
-                    $this->equip($from, $character);
-                }
-                unset($from->details);
-                unset($from->props);
-                unset($from->skill);
-                $from->save();
-                if($to->slot <= 8){
-                    $this->unequip($to, $character);
-                }
-                $to->slot = $temp_slot;
-
-                if($to->slot <= 8){
-                    $this->equip($to, $character);
-                }
-                unset($to->details);
-                unset($to->props);
-                unset($to->skill);
-                $to->save();
-
             }
             else{
-
-                if($from->slot <= 8){
-                    $this->unequip($from, $character);
-                }
-
-                $from->slot = $request->to;
-
-                if($from->slot <= 8){
-                     $this->equip($from, $character);
-                }
-
-                unset($from->details);
-                unset($from->props);
-                unset($from->skill);
-                $from->save();
-
-            }
-
-            $all = Item::where('char_id', $character->id)
-                ->whereBetween('slot',[0, 8])
-                ->get()->map(function ($item){
-                    return $item->details();
-                });
-            $rows = $this->checkRowsAndColums($all);
-
-            foreach ($all as $item){
-                if($rows['combat'] == 3){
-                    if($item->details->equip_class == 1 && $item->slot < 3 && !$item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 1,
-                        ]);
+                if($item->details->equip_class == 1 && $item->slot < 3 && $item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
                     }
-                }
-                else{
-                    if($item->details->equip_class == 1 && $item->slot < 3 && $item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 0,
-                        ]);
-                    }
-                }
-
-                if($rows['sorcery'] == 3){
-                    if($item->details->equip_class == 2 && $item->slot > 2 && $item->slot < 6 && !$item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 1,
-                        ]);
-                    }
-                }
-                else{
-                    if($item->details->equip_class == 2 && $item->slot > 2 && $item->slot < 6 && $item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 0,
-                        ]);
-                    }
-                }
-
-                if($rows['movement'] == 3){
-                    if($item->details->equip_class == 3 && $item->slot > 5 && $item->slot < 9 && !$item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 1,
-                        ]);
-                    }
-                }
-                else{
-                    if($item->details->equip_class == 3 && $item->slot > 5 && $item->slot < 9 && $item->details->row_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'row_bonus' => 0,
-                        ]);
-                    }
-                }
-
-
-                if($rows['weapon'] == 3){
-                    if($item->details->equip_type == 1 && in_array($item->slot, [0,3,6]) && !$item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 1,
-                        ]);
-                    }
-                }
-                else{
-                    if($item->details->equip_type == 1 && in_array($item->slot, [0,3,6]) && $item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 0,
-                        ]);
-                    }
-                }
-
-                if($rows['armour'] == 3){
-                    if($item->details->equip_type == 2 && in_array($item->slot, [1,4,7]) &&  !$item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 1,
-                        ]);
-                    }
-                }
-                else{
-                    if($item->details->equip_type == 2 && in_array($item->slot, [1,4,7]) && $item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 0,
-                        ]);
-                    }
-                }
-
-                if($rows['accessory'] == 3){
-                    if($item->details->equip_type == 3 && in_array($item->slot, [2,5,8]) && !$item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::affectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 1,
-                        ]);
-                    }
-                }
-                else{
-                    if($item->details->equip_type == 3 && in_array($item->slot, [2,5,8]) && $item->details->column_bonus){
-                        foreach ($item->props as $prop){
-                            EquipPropertyService::unaffectBonusToCharacter($prop, $character);
-                        }
-                        EquipDetail::where('item_id', $item->id)->update([
-                            'column_bonus' => 0,
-                        ]);
-                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 0,
+                    ]);
                 }
             }
 
-            $character->save();
-            return $this->sendResponse(['data' => $character->items()], 'Successfully.');
+            if($rows['sorcery'] == 3){
+                if($item->details->equip_class == 2 && $item->slot > 2 && $item->slot < 6 && !$item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 1,
+                    ]);
+                }
+            }
+            else{
+                if($item->details->equip_class == 2 && $item->slot > 2 && $item->slot < 6 && $item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 0,
+                    ]);
+                }
+            }
+
+            if($rows['movement'] == 3){
+                if($item->details->equip_class == 3 && $item->slot > 5 && $item->slot < 9 && !$item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 1,
+                    ]);
+                }
+            }
+            else{
+                if($item->details->equip_class == 3 && $item->slot > 5 && $item->slot < 9 && $item->details->row_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'row_bonus' => 0,
+                    ]);
+                }
+            }
+
+
+            if($rows['weapon'] == 3){
+                if($item->details->equip_type == 1 && in_array($item->slot, [0,3,6]) && !$item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 1,
+                    ]);
+                }
+            }
+            else{
+                if($item->details->equip_type == 1 && in_array($item->slot, [0,3,6]) && $item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 0,
+                    ]);
+                }
+            }
+
+            if($rows['armour'] == 3){
+                if($item->details->equip_type == 2 && in_array($item->slot, [1,4,7]) &&  !$item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 1,
+                    ]);
+                }
+            }
+            else{
+                if($item->details->equip_type == 2 && in_array($item->slot, [1,4,7]) && $item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 0,
+                    ]);
+                }
+            }
+
+            if($rows['accessory'] == 3){
+                if($item->details->equip_type == 3 && in_array($item->slot, [2,5,8]) && !$item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::affectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 1,
+                    ]);
+                }
+            }
+            else{
+                if($item->details->equip_type == 3 && in_array($item->slot, [2,5,8]) && $item->details->column_bonus){
+                    foreach ($item->props as $prop){
+                        EquipPropertyService::unaffectBonusToCharacter($prop, $character);
+                    }
+                    EquipDetail::where('item_id', $item->id)->update([
+                        'column_bonus' => 0,
+                    ]);
+                }
+            }
         }
+
+        $character->save();
+        return $this->sendResponse(['data' => $character], 'Successfully.');
     }
 
-
     public function getList(){
-        return ItemsList::all()->pluck('name');
+        return ItemsList::all();
     }
 
     public function create(Request $request, ItemService $itemService){
         if($request->item_name){
-            $item = $itemService->createByName($request->item_name, new InventoryService(), $request->char_id);
+            $item = $itemService->createByName($request->item_name, $request->char_id, $request->skill_name);
         }
         else{
             $item = $itemService->createRandomItem($request->char_id);
@@ -434,6 +423,13 @@ class ItemController extends BaseController
                 ->limit(2)
                 ->get();
 
+            if(!count($base_props)){
+                return [
+                    'success' => false,
+                    'msg' => 'no amplifications!'
+                ];
+            }
+
             $props = [];
 
             foreach ($base_props as $prop){
@@ -455,7 +451,7 @@ class ItemController extends BaseController
         else{
             return [
                 'success' => true,
-                'msg' => 'not enought exp!'
+                'msg' => 'not enough experience!'
             ];
         }
     }

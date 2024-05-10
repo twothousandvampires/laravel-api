@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Character extends Model
 {
@@ -17,17 +18,15 @@ class Character extends Model
         'name', 'detail','user_id','x','y'
     ];
 
-    public function getItems()
-    {
-        $this->items = $this->hasMany(Item::class,'char_id','id')->get()
-        ->map(function ($item){
-            return $item->details();
-        });
-        return $this;
+    protected $appends = ['items'];
+
+    public function addExp($node_content){
+       $this->exp += json_decode($node_content->content)->enemy->total_exp;;
+       $this->save();
     }
 
-    public function addExp($exp_count){
-       $this->exp += $exp_count;
-       $this->save();
+    public function getItemsAttribute(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->hasMany(Item::class, 'char_id', 'id')->get();
     }
 }

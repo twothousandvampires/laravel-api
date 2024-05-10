@@ -68,7 +68,8 @@ class NodeService{
 
     }
 
-    public function generateNodes($char){
+    public function generateNodes($char): \Illuminate\Database\Eloquent\Collection|array
+    {
 
         $node_content_service =  new NodeContentService();
         // node available to link (links != 0)
@@ -132,7 +133,6 @@ class NodeService{
 
             // if no ways to link
             if(!count($ways)){
-                // no potential kill
                 $parent->save();
                 $nodes_to_link = $nodes_to_link->filter(function ($value, $key) use ($parent) {
                     return $value != $parent;
@@ -159,7 +159,7 @@ class NodeService{
                 $new_node->type = Node::TYPE_ENEMY;
             }
 
-            else if($type > 80){
+            else if($type >= 80){
                 $new_node->type = Node::TYPE_TREASURE;
             }
 
@@ -168,7 +168,7 @@ class NodeService{
             }
 
             $new_node->save();
-            $node_content_service->createContent($new_node);
+            $node_content_service->createContent($new_node, $char);
 
 
             // reduce link potential

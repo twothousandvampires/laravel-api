@@ -34,26 +34,51 @@ class Item extends Model
     const GEM_TYPE_PASSIVE = 2;
     const GEM_TYPE_ALL = 3;
 
+    const EQUIP_CLASS_ACCESSORY = 3;
+
 
     protected $fillable = ['char_id','name','slot','type','rarity'];
 
-    protected $guarded = ['details'];
-    public function details(){
-        switch ($this->type){
-            case self::ITEM_TYPE_USED:
-                $this->details = $this->hasOne(UsedDetail::class,'item_id','id')->get();
-                break;
-            case self::ITEM_TYPE_GEM:
-                $this->details = $this->hasOne(GemDetail::class,'item_id','id')->first();
-                $this->props = $this->hasMany(GemProperties::class,'item_id','id')->get();
-                $this->skill = $this->hasOne(GemSkills::class,'item_id','id')->first()->children();
-                break;
-            case self::ITEM_TYPE_EQUIP:
-                $this->details = $this->hasOne(EquipDetail::class,'item_id','id')->first();
-                $this->props = $this->hasMany(Property::class,'item_id','id')->get();
-                break;
+    protected $appends = ['details', 'props', 'skill'];
+
+    public function getDetailsAttribute()
+    {
+        if($this->type == self::ITEM_TYPE_EQUIP){
+            return $this->hasOne(EquipDetail::class,'item_id','id')->first();
         }
-        return $this;
+        else if($this->type == self::ITEM_TYPE_GEM){
+            return $this->hasOne(GemDetail::class,'item_id','id')->first();
+        }
+        else if($this->type == self::ITEM_TYPE_USED){
+            return $this->hasOne(UsedDetail::class,'item_id','id')->first();
+        }
     }
 
+    public function getPropsAttribute()
+    {
+        if($this->type == self::ITEM_TYPE_EQUIP){
+            return $this->hasMany(Property::class,'item_id','id')->get();
+        }
+        else if($this->type == self::ITEM_TYPE_GEM){
+            return $this->hasMany(GemProperties::class,'item_id','id')->get();
+        }
+        else{
+            return null;
+        }
+    }
+
+    public function getSkillAttribute()
+    {
+        if($this->type == self::ITEM_TYPE_GEM){
+            return $this->hasOne(GemSkills::class,'item_id','id')->first()->children();
+        }
+        else{
+            return null;
+        }
+    }
+
+    public function character(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Character::class);
+    }
 }

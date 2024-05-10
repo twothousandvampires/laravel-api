@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\RegisterController;
@@ -59,9 +58,10 @@ Route::middleware('auth:api')->group( function () {
 
     Route::prefix('skill')->group(function (){
         Route::post('/{id}/up', [SkillController::class, 'upSkill']);
+        Route::get('/list', [SkillController::class, 'getList']);
     });
 
 
-    Route::post('user',[UserController::class, 'getUser'] )->middleware('cors');
+    Route::post('user',[UserController::class, 'getUser'] );
 });
 
