@@ -249,25 +249,27 @@ class ItemService{
         elseif($item->type == Item::ITEM_TYPE_GEM){
 
             $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
-
-            $datails = GemDetail::create([
-                'item_id' => $item->id,
-                'gem_type' => $detail_base->gem_type,
-                'gem_class' => $detail_base->gem_class,
-                'gem_quality' => $quality]
-            );
-
-
             $props = GemPropertyList::where('item_name', $item->name)
                 ->select([ITEM::QUALITY[$quality], 'prop_name'])
-                ->get();
+                ->orderBy('prop_name')
+                ->get()
+                ->toArray();
+            $sorted = [];
 
             foreach ($props as $prop){
-                GemProperties::create(['item_id' => $item->id,
-                                'prop_name' => $prop->prop_name,
-                                'value' => $prop[ITEM::QUALITY[$quality]],
-                ]);
+                $sorted[$prop['prop_name']] = $prop[ITEM::QUALITY[$quality]];
             }
+            GemDetail::create([
+                    'item_id' => $item->id,
+                    'gem_type' => $detail_base->gem_type,
+                    'gem_class' => $detail_base->gem_class,
+                    'gem_quality' => $quality,
+                    'maximum_number_of_amplifications' => $sorted['max_amp'],
+                    'amplification_upgrade_cost' => $sorted['upgrade_amp_exp_cost'],
+                    'reduce_mana_cost' => $sorted['reduce_mana_cost'],
+                    'increase_skill_effect' => $sorted['increase_skill_effect']
+                ]
+            );
 
             $skill_query = GemSkillList::query();
 

@@ -41,6 +41,15 @@ class Item extends Model
 
     protected $appends = ['details', 'props', 'skill'];
 
+    public static function isEquipEquipped($item): bool
+    {
+        return $item->slot <= 8;
+    }
+    public static function isGemEquipped($item): bool
+    {
+        return $item->slot >= 29 && $item->slot <= 34;
+    }
+
     public function getDetailsAttribute()
     {
         if($this->type == self::ITEM_TYPE_EQUIP){
@@ -70,7 +79,7 @@ class Item extends Model
     public function getSkillAttribute()
     {
         if($this->type == self::ITEM_TYPE_GEM){
-            return $this->hasOne(GemSkills::class,'item_id','id')->first()->children();
+            return $this->hasOne(GemSkills::class,'item_id','id')->first();
         }
         else{
             return null;

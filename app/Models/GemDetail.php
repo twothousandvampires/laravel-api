@@ -12,6 +12,6 @@ class GemDetail extends Model
     protected $table = 'game_serve.gem_details';
 
     public $timestamps = false;
-    protected $fillable = ['item_id','gem_type','gem_class','gem_quality'];
+    protected $fillable = ['item_id','gem_type','gem_class','gem_quality','maximum_number_of_amplifications', 'amplification_upgrade_cost', 'reduce_mana_cost','increase_skill_effect'];
 
 }

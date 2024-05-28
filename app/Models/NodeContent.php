@@ -15,6 +15,7 @@ class NodeContent extends Model
     public const ENEMY_TYPE_UNDEAD = 1;
     public const TREASURE_TYPE_CHEST = 1;
     public const TREASURE_TYPE_SCROLL = 2;
+    public const TREASURE_TYPE_CRYSTAL_VEIN = 3;
 
     protected $fillable = [
 

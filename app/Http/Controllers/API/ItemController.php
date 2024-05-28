@@ -19,6 +19,16 @@ use Illuminate\Support\Facades\Auth;
 
 class ItemController extends BaseController
 {
+    public function gemUnequip(&$item, &$character){
+        //todo gem quality
+        GemSkills::unaffectPassiveSkillToCharacter($item, $character);
+    }
+
+    public function gemEquip(&$item, &$character){
+        //todo gem quality
+        GemSkills::affectPassiveSkillToCharacter($item, $character);
+    }
+
     public function unequip(&$item, &$character){
 
         $penalty = $this->checkSlotPenalty($item);
@@ -180,39 +190,58 @@ class ItemController extends BaseController
         if($to){
             $temp_slot = $from->slot;
 
-            if($from->slot <= 8){
+            if(Item::isEquipEquipped($from)){
                $this->unequip($from, $character);
+            }
+            else if(Item::isGemEquipped($from)){
+                $this->gemUnequip($from, $character);
             }
 
             $from->slot = $to->slot;
 
-            if($from->slot <= 8){
+            if(Item::isEquipEquipped($from)){
                 $this->equip($from, $character);
+            }
+            else if(Item::isGemEquipped($from)){
+                $this->gemEquip($from, $character);
             }
 
             $from->save();
-            if($to->slot <= 8){
+            if(Item::isEquipEquipped($to)){
                 $this->unequip($to, $character);
+            }
+            else if(Item::isGemEquipped($from)){
+                $this->gemUnequip($to, $character);
             }
 
             $to->slot = $temp_slot;
 
-            if($to->slot <= 8){
+            if(Item::isEquipEquipped($to)){
                 $this->equip($to, $character);
+            }
+            else if(Item::isGemEquipped($from)){
+                $this->gemEquip($to, $character);
             }
 
             $to->save();
 
         }
         else{
-            if($from->slot <= 8){
+            if(Item::isEquipEquipped($from)){
                 $this->unequip($from, $character);
             }
+            if(Item::isGemEquipped($from)){
+                $this->gemUnequip($from, $character);
+            }
+
 
             $from->slot = $request->to;
 
-            if($from->slot <= 8){
+            if(Item::isEquipEquipped($from)){
                  $this->equip($from, $character);
+            }
+            if(Item::isGemEquipped($from)){
+                $this->gemEquip($from, $character);
             }
 
             $from->save();

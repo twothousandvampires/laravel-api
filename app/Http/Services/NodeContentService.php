@@ -33,19 +33,30 @@ class NodeContentService
 
         }
         else if($node->type == Node::TYPE_TREASURE){
-
+            $content = json_decode('{}');
             $rnd = random_int(0,100);
-            if($rnd >= 0){
+            if($rnd >= 50){
                 $node_content->content_type = NodeContent::TREASURE_TYPE_CHEST;
+                $content->item = $this->getItemForChest();
             }
             else{
-                $node_content->content_type = NodeContent::TREASURE_TYPE_SCROLL;
+                $node_content->content_type = NodeContent::TREASURE_TYPE_CRYSTAL_VEIN;
+                $content->item = $this->getItemForCrystalVein();
             }
 
-
+            $node_content->content = json_encode($content);
         }
 
         $node_content->save();
+    }
+
+    public function getItemForCrystalVein(){
+        return ItemsList::where('type', 2)->inRandomOrder()->first()->name;
+    }
+
+    public function getItemForChest(){
+        $rarity = $this->generateRarity();
+        return ItemsList::where('rarity', $rarity)->inRandomOrder()->first()->name;
     }
 
     public function secondCoverSlotsAvailable($first_line_reserved, $first_line, $second_line)

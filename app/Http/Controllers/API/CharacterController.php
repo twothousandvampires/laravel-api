@@ -85,7 +85,7 @@ class CharacterController extends BaseController
                 $character->y = $request->y;
                 $character->save();
                 $node_content = $new_node->content()->first();
-                $item = $itemService->createItemFromTreasure($char_id, $node_content->content_type);
+                $item = $itemService->createByName(json_decode($node_content->content)->item);
                 if (!$item->slot) {
                     $log->addToLog('you found an item but you don`t have room for it');
                     Item::find($item->id)->delete();
