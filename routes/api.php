@@ -23,7 +23,7 @@ use App\Http\Controllers\API\ApiController;
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login'])->name('login');
 Route::post('logout', [RegisterController::class, 'logout']);
-Route::get('enemy_list', [ApiController::class, 'enemy_list']);
+Route::get('enemy_list', [ApiController::class, 'enemyList']);
 
 Route::middleware('auth:api')->group( function () {
 
@@ -32,33 +32,37 @@ Route::middleware('auth:api')->group( function () {
 
         Route::middleware('check')->group( function () {
             Route::get('/get/{char_id}', [CharacterController::class, 'get']);
-            Route::get('/torch/{char_id}', [CharacterController::class, 'useTorch']);
+            Route::post('/torch/{char_id}', [CharacterController::class, 'useTorch']);
             Route::post('/{char_id}/world',[CharacterController::class, 'world']);
             Route::post('/{char_id}/win/',[CharacterController::class, 'win']);
             Route::post('/{char_id}/move/',[CharacterController::class, 'move']);
             Route::post('/{char_id}/delete/',[CharacterController::class, 'delete']);
             Route::post('/set/{char_id}',[CharacterController::class, 'set']);
+            Route::post('/use_items/{char_id}',[CharacterController::class, 'useItems']);
+            Route::post('/get_passives/{char_id}',[CharacterController::class, 'getPassives']);
+            Route::post('/learn_passive/{char_id}/{passive_id}',[CharacterController::class, 'learnPassive']);
+            Route::post('/upgrade_passive/{char_id}/{passive_id}',[CharacterController::class, 'upgradePassive']);
+            Route::post('/set_started/{char_id}',[CharacterController::class, 'setStarted']);
         });
     });
 
     Route::prefix('item')->group(function (){
         Route::get('/', [ItemController::class, 'getList']);
-        Route::post('/change/',[ItemController::class, 'change']);
+        Route::post('/change/{char_id}',[ItemController::class, 'change']);
         Route::post('/create/',[ItemController::class, 'create']);
         Route::post('/delete/',[ItemController::class, 'delete']);
         Route::delete('/delete_all/',[ItemController::class, 'deleteAll']);
         Route::post('/use/{id}',[ItemController::class, 'use']);
         Route::post('/amplifications/',[ItemController::class, 'amplifications']);
-    });
-
-    Route::prefix('amplification')->group(function (){
-        Route::post('/{id}/up', [SkillController::class, 'upAmplification']);
-        Route::post('/{id}/upgrade', [SkillController::class, 'upgradeAmplification']);
+        Route::post('/upgrade_quality/{char_id}/{item_id}',[ItemController::class, 'upgradeQuality']);
+        Route::post('/upgrade_effect/{char_id}/{item_id}',[ItemController::class, 'upgradeEffect']);
+        Route::post('/add_property/{char_id}/{item_id}',[ItemController::class, 'addProperty']);
     });
 
     Route::prefix('skill')->group(function (){
-        Route::post('/{id}/up', [SkillController::class, 'upSkill']);
-        Route::get('/list', [SkillController::class, 'getList']);
+        Route::post('/get_skills/{char_id}/{item_id}', [SkillController::class, 'getSkills']);
+        Route::post('/learn_skill/{char_id}', [SkillController::class, 'learnSkill']);
+        Route::post('/upgrade_skill/{char_id}', [SkillController::class, 'upgradeSkill']);
     });
 
 

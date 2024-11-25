@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class EquipPropertiesList extends Model
 {
     use HasFactory;
+
     protected $table = 'equipment_properties_list';
 }

@@ -1,12 +1,12 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Character extends Model
 {
-    private $max_inv = 20;
+    private $max_inv = 24;
 
     public $timestamps = false;
     /**
@@ -15,18 +15,40 @@ class Character extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'detail','user_id','x','y'
+        'name', 'detail', 'user_id', 'x', 'y'
     ];
 
-    protected $appends = ['items'];
-
-    public function addExp($node_content){
-       $this->exp += json_decode($node_content->content)->enemy->total_exp;;
-       $this->save();
+    protected $appends = ['items', 'passives', 'skills'];
+    public function getFood(){
+        if($this->food == 0){
+            $this->move_without_food ++;
+            if($this->move_without_food >= 10){
+                $this->dead = 1;
+            }
+        }
+        else{
+            $this->move_without_food = 0;
+            $this->food--;
+        }
+    }
+    public function addExp($node_content)
+    {
+        $decoded = json_decode($node_content->content);
+        $this->exp += $decoded->enemy->total_exp;
+        $this->enemies_killed += $decoded->enemy->total_count;
+        $this->save();
     }
 
     public function getItemsAttribute(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->hasMany(Item::class, 'char_id', 'id')->get();
+    }
+    public function getPassivesAttribute(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->hasMany(Passives::class, 'char_id', 'id')->get();
+    }
+    public function getSkillsAttribute(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->hasMany(Skills::class, 'char_id', 'id')->where('level','!=', 0)->get();
     }
 }

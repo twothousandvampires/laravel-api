@@ -23,10 +23,10 @@ class NodeContentService
 
         if($node->type == Node::TYPE_ENEMY){
 
-            $node_content->content_type = NodeContent::ENEMY_TYPE_UNDEAD;
+            $r = mt_rand(1,3);
+            $node_content->content_type = $r;
 
             $content = json_decode('{}');
-            $content->map = $this->generateMap();
             $content->enemy = $this->generateGroup($node, $node_content->content_type);
 
             $node_content->content = json_encode($content);
@@ -34,32 +34,87 @@ class NodeContentService
         }
         else if($node->type == Node::TYPE_TREASURE){
             $content = json_decode('{}');
-            $rnd = random_int(0,100);
-            if($rnd >= 50){
-                $node_content->content_type = NodeContent::TREASURE_TYPE_CHEST;
-                $content->item = $this->getItemForChest();
-            }
-            else{
-                $node_content->content_type = NodeContent::TREASURE_TYPE_CRYSTAL_VEIN;
-                $content->item = $this->getItemForCrystalVein();
-            }
+
+            $node_content->content_type = NodeContent::generateTreasureContentType();
+            $content->item = NodeContent::generateItemForTreasure($node_content->content_type, $this->generateRarity());
+
+            $node_content->content = json_encode($content);
+        }
+        else if($node->type == Node::TYPE_OBJECT){
+            $content = json_decode('{}');
+            $node_content->content_type = NodeContent::generateObjectContentType();
+            $content->enemy = $this->generateGroupForObject($node, $node_content->content_type);
 
             $node_content->content = json_encode($content);
         }
 
         $node_content->save();
     }
+    public function generateGroupForObject($node, $node_type): array
+    {
+        $template = null;
+        $distance = sqrt(pow($node->x, 2) + pow($node->y, 2));
+        $distance = floor($distance/20);
 
-    public function getItemForCrystalVein(){
-        return ItemsList::where('type', 2)->inRandomOrder()->first()->name;
+        if($distance > 3){
+            $distance = 3;
+        }
+
+        if($node_type === NodeContent::OBJECT_TYPE_PALE_OBELISK){
+            $template = Enemy::leftJoin('enemy_count as ec', function ($join){
+                $join->on('ec.enemy_id','=','enemies.id');
+            })
+                ->where('name', 'fantasm')
+                ->get()[0];
+
+            $template->chance = 100;
+            $template->min_count *= $distance + 1;
+            $template->max_count *= $distance + 1;
+        }
+
+        else if($node_type === NodeContent::OBJECT_TYPE_BREWPOTION_POST){
+            $template = Enemy::leftJoin('enemy_count as ec', function ($join){
+                $join->on('ec.enemy_id','=','enemies.id');
+            })
+                ->where('name', 'greenskin potion thwower')
+                ->get()[0];
+
+            $template->chance = 100;
+            $template->min_count *= $distance + 1;
+            $template->max_count *= $distance + 1;
+        }
+
+        else if($node_type === NodeContent::OBJECT_TYPE_FLYING_SCROLLS){
+            $template = Enemy::leftJoin('enemy_count as ec', function ($join){
+                $join->on('ec.enemy_id','=','enemies.id');
+            })
+                ->where('name', 'bones of sorcerer')
+                ->get()[0];
+
+            $template->chance = 100;
+            $template->min_count *= $distance + 1;
+            $template->max_count *= $distance + 1;
+        }
+        else if($node_type === NodeContent::OBJECT_TYPE_ABANDONED_FORGE){
+            $enemies = Enemy::leftJoin('enemy_count as ec', function ($join){
+                $join->on('ec.enemy_id','=','enemies.id');
+            })
+                ->whereIn('name', ['enchanted armour', 'enchanted weapon'])
+                ->where('distance', $distance)
+                ->get();
+
+            foreach ($enemies as $enemy){
+                $enemy->chance = 100;
+                $enemy->min_count *= $distance + 1;
+                $enemy->max_count *= $distance + 1;
+            }
+            return $this->compactGroup($enemies, $distance);
+        }
+
+        return $this->compactGroup([$template], $distance);
     }
 
-    public function getItemForChest(){
-        $rarity = $this->generateRarity();
-        return ItemsList::where('rarity', $rarity)->inRandomOrder()->first()->name;
-    }
-
-    public function secondCoverSlotsAvailable($first_line_reserved, $first_line, $second_line)
+    public function secondCoverSlotsAvailable($first_line_reserved, $second_line): array
     {
         if(!count($first_line_reserved)){
             return [];
@@ -73,141 +128,203 @@ class NodeContentService
 
         return $data;
     }
-
-    public function generateGroup($node, $content_type): array
+    public function compactGroup($group_array, $distance): array
     {
         $first_line = [5, 12, 19, 26, 33];
         $second_line = [6, 13, 20, 27, 34];
-        $third_line = [8, 14, 21, 28, 35];
+        $third_line = [7, 14, 21, 28, 35];
 
         $first_line_reserved = [];
         $second_line_reserved = [];
 
-        $max_count = 15;
+        $max_count = 4;
+
+        if($distance == 1){
+            $max_count = 8;
+        }
+        else if($distance == 2){
+            $max_count = 12;
+        }
+        else if($distance == 3){
+            $max_count = 15;
+        }
+
         $created_count = 0;
 
+        $group = [
+            'total_count' => 0,
+            'total_exp' => 0,
+            'groups' => [],
+        ];
+
+        if(!$group_array[0]){
+            return $group;
+        }
+
+        foreach ($group_array as $enemy){
+
+            if($created_count >= $max_count){
+                break;
+            }
+
+            $count = random_int($enemy->min_count, $enemy->max_count);
+            $squad = [];
+
+            for($i = 0; $i < $count; $i++){
+                if($created_count >= $max_count || random_int(0,100) >  $enemy->chance){
+                    continue;
+                }
+                if($enemy->line === 1){
+                    if(count($first_line)){
+                        $num = $first_line[array_rand($first_line)];
+                        $first_line_reserved[] = $num;
+                        unset($first_line[array_search($num, $first_line)]);
+                        $created_count++;
+                    }
+                    else if(count($second_line)){
+                        $num = $second_line[array_rand($second_line)];
+                        $second_line_reserved[] = $num;
+                        unset($second_line[array_search($num, $second_line)]);
+                        $created_count++;
+                    }
+                    else if(count($third_line)){
+                        $num = $third_line[array_rand($third_line)];
+                        unset($third_line[array_search($num, $third_line)]);
+                        $created_count++;
+                    }
+                }
+                else if($enemy->line === 2){
+                    if(count($second_line)){
+                        $covered = $this->secondCoverSlotsAvailable($first_line_reserved, $first_line);
+                        if(count($covered)){
+                            $num = $covered[array_rand($covered)];
+                        }
+                        else{
+                            $num = $second_line[array_rand($second_line)];
+                        }
+                        $second_line_reserved[] = $num;
+                        unset($second_line[array_search($num, $second_line)]);
+                        $created_count++;
+                    }
+                    else if(count($third_line)){
+                        $num = $third_line[array_rand($third_line)];
+                        unset($third_line[array_search($num, $third_line)]);
+                        $created_count++;
+                    }
+                    else if(count($first_line)){
+                        $num = $first_line[array_rand($first_line)];
+                        unset($first_line[array_search($num, $first_line)]);
+                        $created_count++;
+                    }
+                }
+                else if($enemy->line === 3){
+                    if(count($third_line)){
+                        $covered = $this->secondCoverSlotsAvailable($second_line, $second_line_reserved);
+                        if(count($covered)){
+                            $num = $covered[array_rand($covered)];
+                        }
+                        else{
+                            $num = $third_line[array_rand($third_line)];
+                        }
+                        unset($third_line[array_search($num, $third_line)]);
+                        $created_count++;
+                    }
+                    else if(count($second_line)){
+                        $num = $second_line[array_rand($second_line)];
+                        unset($second_line[array_search($num, $second_line)]);
+                        $created_count++;
+                    }
+                    else if(count($first_line)){
+                        $num = $first_line[array_rand($first_line)];
+                        unset($first_line[array_search($num, $first_line)]);
+                        $created_count++;
+                    }
+                }
+
+                $squad[] = [
+                    'name' => $enemy->name,
+                    'num' => $num
+                ];
+
+            }
+
+            $group['groups'][] = $squad;
+            $group['total_exp'] += count($squad) * $enemy->exp_gain;
+            $group['total_count'] += count($squad);
+
+        }
+        return $group;
+    }
+    public function generateGroup($node, $type): array
+    {
         $distance = sqrt(pow($node->x, 2) + pow($node->y, 2));
-        $distance = floor($distance/50);
+        $distance = floor($distance/25);
 
         if($distance > 3){
             $distance = 3;
         }
 
-        $all = Enemy::leftJoin('enemy_types as et','enemies.type_id','=','et.id')
-                    ->leftJoin('enemy_count as ec', function ($join) use($distance){
-                        $join->on('ec.enemy_id','=','enemies.id')
-                        ->where('ec.distance', $distance);
-
-                    })
-                    ->where('enemies.type_id', $content_type)
-                    ->whereIn('enemies.name', ['skeleton warrior', 'skeleton archer']) // !!!
-                    ->get();
-
-        $group = [
-            'total_exp' => 0,
-            'groups' => [],
-        ];
-
-        foreach ($all as $enemy){
-
-            if($created_count >= $max_count){
-                continue;
-            }
-
-            if($enemy->chance >= random_int(0,100)){
-                $count = random_int($enemy->min_count, $enemy->max_count);
-
-                if($created_count + $count > $max_count){
-                    $count = $max_count - $created_count;
-                }
-
-                if($count){
-                    $squad = [];
-
-                    for($i = 0; $i < $count; $i++){
-                        if($enemy->line === 1){
-                            $num = $first_line[array_rand($first_line)];
-                            $first_line_reserved[] = $num;
-                            unset($first_line[array_search($num, $first_line)]);
-                        }
-                        else if($enemy->line === 2){
-                            $covered = $this->secondCoverSlotsAvailable($first_line_reserved, $first_line, $second_line);
-                            if(count($covered)){
-                                $num = $covered[array_rand($covered)];
-                                $second_line_reserved[] = $num;
-                                unset($second_line[array_search($num, $second_line)]);
-                            }
-                            else{
-                                $num = $second_line[array_rand($second_line)];
-                                $second_line_reserved[] = $num;
-                                unset($second_line[array_search($num, $second_line)]);
-                            }
-                        }
-                        $squad[] = [
-                            'name' => $enemy->name,
-                            'num' => $num
-                        ];
-                    }
-
-                    $created_count += $count;
-                    $group['groups'][] = $squad;
-                    $group['total_exp'] += $count * $enemy->exp_gain;
-                }
-            }
-        }
+        $group_array = enemy::getEnemyByDistance($type, $distance);
+        $group = $this->compactGroup($group_array, $distance);
 
         if(random_int(0,100) > 90){
             $log = App::make(Log::class);
-            $log->addTolog($this->getMsgToLog($content_type));
+            $log->addTolog($this->getMsgToLog($type));
         }
 
-        $group['item'] = $this->generateRewardItem($content_type);
+        $group['item'] = $this->generateRewardItem($type);
 
         return $group;
     }
-
     private function getMsgToLog($content_type){
         if($content_type === enemy::ENEMY_TYPE_UNDEAD){
             return 'bones are shaking nearby...';
         }
     }
-
     private function generateRewardItem($content_type){
+        $rnd = mt_rand(0, 100);
         if($content_type === NodeContent::ENEMY_TYPE_UNDEAD){
+            if($rnd > 40){
+                return null;
+            }
             $rarity = $this->generateRarity();
-            // accessory or gem
+
             $item = ItemsList::leftJoin('game_data.equip_detail_list as edl', 'edl.item_list_id', '=' , 'item_List.id')
                    ->where('type', Item::ITEM_TYPE_EQUIP)
                    ->where('rarity', $rarity)
                    ->where('edl.equip_type', '=', Item::EQUIP_CLASS_ACCESSORY)
-                   ->orWhere('type', Item::ITEM_TYPE_GEM)
                    ->inRandomOrder()
                    ->first();
 
             return $item ? $item->name : null;
         }
-    }
+        else if($content_type === NodeContent::ENEMY_TYPE_GREENSKINS){
+            if($rnd > 60){
+                return null;
+            }
+            $rarity = $this->generateRarity();
+            $item = ItemsList::leftJoin('game_data.equip_detail_list as edl', 'edl.item_list_id', '=' , 'item_List.id')
+                ->where('type', Item::ITEM_TYPE_EQUIP)
+                ->where('rarity','<=', $rarity)
+                ->where('edl.equip_class', 3)
+                ->inRandomOrder()
+                ->first();
 
+            return $item ? $item->name : null;
+        }
+    }
     private function generateRarity(): int
     {
         $random = random_int(0, 100);
-        if($random >= 95){
+        if($random >= 90){
             return 4;
         }
-        else if($random >= 80){
+        else if($random >= 70){
             return 3;
         }
-        else if($random >= 60){
+        else if($random >= 35){
             return 2;
         }
         return 1;
-    }
-
-    public function generateMap(){
-        $map = json_decode('{}');
-        $size = random_int(500,600);
-        $map->width  = $size;
-        $map->height = $size;
-        return $map;
     }
 }

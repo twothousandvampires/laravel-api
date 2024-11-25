@@ -7,17 +7,16 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends BaseController
 {
-    public function getUser()
+    public function getUser(): \Illuminate\Http\JsonResponse
     {
 
         $user = User::find(Auth::user()->id);
-        $user->characters = $user->character()->get();
-
-        if (is_null($user)) {
+        if (!$user) {
             return $this->sendError('User not found.');
         }
+        $user->characters = $user->character()->get();
 
-        return $this->sendResponse($user,'user');
+        return $this->sendResponse($user, 'user');
 
     }
 }

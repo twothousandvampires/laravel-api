@@ -5,100 +5,68 @@ namespace App\Http\Services;
 class EquipPropertyService
 {
 
-    static function affectToCharacter(&$prop, &$character, $penalty): void
+    static function affectToCharacter(&$prop, &$character, $penalty, $inc_effect): void
     {
-        if($prop->prop_type === 1){
-            $value =  $prop->value;
-            $value = floor($value - ($value * ($penalty / 100)));
-
-            if($prop->sub_type === 1){
-                $character[$prop->stat] += $value;
-            }
-            else if($prop->sub_type === 2){
-                $character[$prop->stat] -= $value;
-            }
+        if($prop->sub_type === null){
+            return;
         }
+        $value =  $prop->value;
+        $value = floor($value * (1 - ($penalty / 100)));
+
+        if($prop->sub_type === 1){
+            $value = floor($value * (1 + $inc_effect / 100));
+            $character[$prop->stat] += $value;
+        }
+        else if($prop->sub_type === 2){
+            $character[$prop->stat] -= $value;
+        }
+
     }
 
-    static function unaffectToCharacter($prop, &$character, $penalty, $row, $column): void
+    static function unaffectToCharacter($prop, &$character, $penalty, $inc_effect): void
     {
-        if($prop->prop_type === 1){
-            $value =  $prop->value;
-            $row_value = floor($value * ($row  / 100));
-            $column_value = floor($value * ( $column / 100));
-            $value = floor($value - ($value * ($penalty / 100)));
-
-            if($prop->sub_type === 1){
-                if($prop->inc_type === 1)
-                {
-                    $character[$prop->stat] -= $row_value + $column_value + $value;
-                }
-                elseif ($prop->inc_type === 2)
-                {
-                    $character[$prop->stat] -= $value - $row_value - $column_value;
-                }
-            }
-            else if($prop->sub_type === 2){
-                if($prop->inc_type === 1)
-                {
-                    $character[$prop->stat] += $value - $row_value - $column_value;
-                }
-                elseif ($prop->inc_type === 2)
-                {
-                    $character[$prop->stat] +=  $value + $row_value + $column_value;
-                }
-            }
+        if($prop->sub_type === null){
+            return;
         }
+        $value =  $prop->value;
+        $value = floor($value * (1 - ($penalty / 100)));
+
+        if($prop->sub_type === 1){
+            $value = floor($value * (1 + $inc_effect / 100));
+            $character[$prop->stat] -= $value;
+
+        }
+        else if($prop->sub_type === 2){
+            $character[$prop->stat] += $value;
+        }
+
     }
     static function affectBonusToCharacter(&$prop, &$character): void
     {
-        if($prop->prop_type === 1){
-            $value =  $prop->value;
-            $value = floor($value * (10 / 100));
-            if($prop->sub_type === 1)
-            {
-                if($prop->inc_type === 1){
-                    $character[$prop->stat] += $value;
-                }
-                else if($prop->inc_type === 2){
-                    $character[$prop->stat] -= $value;
-                }
-            }
-            else if($prop->sub_type === 2)
-            {
-                if($prop->inc_type === 1){
-                    $character[$prop->stat] += $value;
-                }
-                else if($prop->inc_type === 2){
-                    $character[$prop->stat] -= $value;
-                }
-            }
+        if($prop->sub_type === null){
+            return;
         }
+        $value =  $prop->value;
+        $value = floor($value * (20 / 100));
+
+        $character[$prop->stat] += $value;
     }
 
     static function unaffectBonusToCharacter(&$prop, &$character): void
     {
-        if($prop->prop_type === 1){
-            $value =  $prop->value;
-            $value = floor($value * (10 / 100));
-            if($prop->sub_type === 1)
-            {
-                if($prop->inc_type === 1){
-                    $character[$prop->stat] -= $value;
-                }
-                else if($prop->inc_type === 2){
-                    $character[$prop->stat] += $value;
-                }
-            }
-            else if($prop->sub_type === 2)
-            {
-                if($prop->inc_type === 1){
-                    $character[$prop->stat] -= $value;
-                }
-                else if($prop->inc_type === 2){
-                    $character[$prop->stat] += $value;
-                }
-            }
+        if($prop->sub_type === null){
+            return;
+        }
+        $value =  $prop->value;
+        $value = floor($value * (20 / 100));
+
+        if($prop->sub_type === 1)
+        {
+            $character[$prop->stat] -= $value;
+        }
+        else if($prop->sub_type === 2)
+        {
+            $character[$prop->stat] -= $value;
         }
     }
 }

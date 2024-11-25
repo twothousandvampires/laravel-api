@@ -11,5 +11,5 @@ class Property extends Model
 
     protected $table = 'properties';
     public $timestamps = false;
-    protected $fillable = ['item_id','name','value','stat','prop_type','sub_type','inc_type'];
+    protected $fillable = ['item_id', 'name', 'value', 'stat', 'sub_type', 'prop_list_id'];
 }

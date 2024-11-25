@@ -4,22 +4,17 @@ namespace App\Http\Services;
 
 use App\Models\EquipDetail;
 use App\Models\EquipDetailList;
-use App\Models\GemDetail;
-use App\Models\GemDetailList;
-use App\Models\GemProperties;
-use App\Models\GemPropertyList;
-use App\Models\GemSkills;
 use App\Models\ItemsList;
 use App\Models\Item;
 use App\Models\EquipPropertiesList;
 use App\Models\NodeContent;
 use App\Models\Property;
+use App\Models\UsedDetail;
+use App\Models\UsedDetailList;
 use Illuminate\Http\Request;
-use App\Models\GemSkillList;
+use ParagonIE\Sodium\Core\Curve25519\Fe;
 
 class ItemService{
-
-    const GEM_TYPE_ALL = 'all';
 
     public $inv_service;
 
@@ -36,6 +31,23 @@ class ItemService{
             return $this->createRandomScroll($char_id);
         }
     }
+
+    private function getQuality(): int
+    {
+        $r = mt_rand(0, 100);
+        if($r <= 2){
+            return 4;
+        }
+        else if($r <= 5){
+            return 3;
+        }
+        else if($r <= 12){
+            return 2;
+        }
+        else{
+            return  1;
+        }
+    }
     public function createRandomScroll($char_id){
         $item_data = [];
 
@@ -46,7 +58,7 @@ class ItemService{
         $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
 
         //generate quality
-        $quality = mt_rand(1,4);
+        $quality = $this->getQuality();
 
         $item_data['quality'] = $quality;
 
@@ -72,7 +84,7 @@ class ItemService{
 
         $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
 
-        $quality = mt_rand(1,4);
+        $quality = $this->getQuality();
 
         $item_data['quality'] = $quality;
 
@@ -96,80 +108,14 @@ class ItemService{
             'equip_quality' => $quality]);
 
 
-        $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality], 'stat' , 'name' , 'prop_type')->get();
-
+        $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality], 'stat' , 'name')->get();
 
         foreach ($property as $prop){
             Property::create(['item_id' => $item->id,
                               'name' => $prop->name,
                               'value' => $prop[ITEM::QUALITY[$quality]],
-                              'stat' => $prop->stat,
-                              'prop_type' => $prop->prop_type]);
+                              'stat' => $prop->stat]);
         }
-
-        return Item::find($item->id);
-    }
-
-    public function createRandomGem($char_id = false){
-        $item_data = [];
-        if($char_id){
-            $item_data['char_id'] = $char_id;
-        }
-
-        $quality = mt_rand(1,4);
-
-        $item_data['slot'] = $this->inv_service->getFreeSlots($char_id);
-
-        $base = ItemsList::inRandomOrder()
-                            ->where('type',Item::ITEM_TYPE_GEM)
-                            ->select('id','name','type','rarity')
-                            ->first()
-                            ->toArray();
-
-        $item = Item::create(array_merge($item_data, $base));
-
-        $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
-
-        GemDetail::create([
-            'item_id' => $item->id,
-            'gem_type' => $detail_base->gem_type,
-            'gem_class' => $detail_base->gem_class,
-            'gem_quality' => $quality]);
-
-        $props = GemPropertyList::where('item_name', $item->name)
-                                ->select(ITEM::QUALITY[$quality],'prop_name')
-                                ->get();
-
-        foreach ($props as $prop){
-            GemProperties::create(['item_id' => $item->id,
-                'name' => $prop->prop_name,
-                'value' => $prop[ITEM::QUALITY[$quality]],
-            ]);
-        }
-
-        $skill_query = GemSkillList::query();
-
-        if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
-            $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
-        }
-
-        if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
-            $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
-        }
-
-        $skill = $skill_query->inRandomOrder()
-                             ->where('active', 1)
-                             ->first();
-
-        GemSkills::create([
-            'item_id' => $item->id,
-            'name' => $skill->name,
-            'skill_type' => $skill->gem_type,
-            'skill_class' => $skill->gem_class,
-            'exp_needed' => $skill->exp_needed,
-            'max_level' => $skill->max_level,
-            'level' => 1
-        ]);
 
         return Item::find($item->id);
     }
@@ -197,19 +143,21 @@ class ItemService{
         return Item::with('properties')->find($item->id);
     }
 
-    public function createByName($item_name, $char_id = false, $skill_name = false){
+    public function createByName($item_name, $char_id, $slot = false){
+
+        if(!$item_name){
+            return false;
+        }
 
         $inventoryService = new InventoryService();
 
         $item_data = [];
 
-        if($char_id){
-            $item_data['char_id'] = $char_id;
-        }
+        $item_data['char_id'] = $char_id;
 
-        $item_data['slot'] = $inventoryService->getFreeSlots($char_id);
+        $item_data['slot'] = $slot ?: $inventoryService->getFreeSlots($char_id);
 
-        $quality = mt_rand(1,4);
+        $quality = $this->getQuality();
 
         $item_data['quality'] = $quality;
 
@@ -226,78 +174,37 @@ class ItemService{
 
             $detail_base = EquipDetailList::where('item_list_id', $base['id'])->first();
 
-            $datails = EquipDetail::create([
+            EquipDetail::create([
                 'item_id' => $item->id,
                 'equip_type' => $detail_base->equip_type,
                 'equip_class' => $detail_base->equip_class,
                 'equip_quality' => $quality]);
 
 
-            $property = EquipPropertiesList::where('item_name', $base['name'])->select(ITEM::QUALITY[$quality],'stat','name','prop_type','sub_type','inc_type')->get();
+            $property = EquipPropertiesList::where('item_name', $base['name'])->select('id', ITEM::QUALITY[$quality],'stat','name','sub_type')->get();
 
             foreach ($property as $prop){
-                Property::create(['item_id' => $item->id,
+                Property::create([
+                    'item_id' => $item->id,
                     'name' => $prop->name,
                     'value' => $prop[ITEM::QUALITY[$quality]],
                     'stat' => $prop->stat,
-                    'prop_type' => $prop->prop_type,
                     'sub_type' => $prop->sub_type,
-                    'inc_type' => $prop->inc_type]);
+                    'prop_list_id' => $prop->id]);
             }
 
         }
-        elseif($item->type == Item::ITEM_TYPE_GEM){
+        elseif($item->type === Item::ITEM_TYPE_USED){
 
-            $detail_base = GemDetailList::where('item_list_id',$base['id'])->first();
-            $props = GemPropertyList::where('item_name', $item->name)
-                ->select([ITEM::QUALITY[$quality], 'prop_name'])
-                ->orderBy('prop_name')
-                ->get()
-                ->toArray();
-            $sorted = [];
-
-            foreach ($props as $prop){
-                $sorted[$prop['prop_name']] = $prop[ITEM::QUALITY[$quality]];
-            }
-            GemDetail::create([
+                $details = UsedDetailList::where('item_list_id', $base['id'])->first();
+                UsedDetail::create([
                     'item_id' => $item->id,
-                    'gem_type' => $detail_base->gem_type,
-                    'gem_class' => $detail_base->gem_class,
-                    'gem_quality' => $quality,
-                    'maximum_number_of_amplifications' => $sorted['max_amp'],
-                    'amplification_upgrade_cost' => $sorted['upgrade_amp_exp_cost'],
-                    'reduce_mana_cost' => $sorted['reduce_mana_cost'],
-                    'increase_skill_effect' => $sorted['increase_skill_effect']
-                ]
-            );
-
-            $skill_query = GemSkillList::query();
-
-            if($skill_name){
-                $skill = $skill_query->where('name', $skill_name)->first();
-            }
-            else{
-                if($detail_base->gem_type !== Item::GEM_TYPE_ALL){
-                    $skill_query = $skill_query->where('gem_type', $detail_base->gem_type);
-                }
-
-                if($detail_base->gem_class !== Item::GEM_CLASS_ALL){
-                    $skill_query = $skill_query->where('gem_class', $detail_base->gem_class);
-                }
-
-                $skill = $skill_query->inRandomOrder()->first();
+                    'power' => $details->power,
+                    'used_type' => $details->used_type,
+                    'server_logic' => $details->server_logic
+                ]);
             }
 
-            GemSkills::create([
-                'item_id' => $item->id,
-                'name' => $skill->name,
-                'skill_type' => $skill->gem_type,
-                'skill_class' => $skill->gem_class,
-                'exp_needed' => $skill->exp_needed,
-                'level' => 1
-            ]);
-
-        }
 
         return Item::find($item->id);
     }

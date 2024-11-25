@@ -6,7 +6,8 @@ use App\Models\enemy;
 
 class ApiController extends BaseController
 {
-    public function enemy_list(){
+    public function enemyList(): \Illuminate\Http\Response
+    {
         $enemy_list = enemy::all()->pluck('name');
         return $this->sendResponse($enemy_list);
     }

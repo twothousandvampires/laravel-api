@@ -6,14 +6,10 @@ use App\Http\Controllers\Controller as Controller;
 
 class BaseController extends Controller
 {
-    /**
-     * success response method.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function sendResponse($result, $msg = '')
+
+    public function sendResponse($result, $msg = ''): \Illuminate\Http\JsonResponse
     {
-    	$response = [
+        $response = [
             'success' => true,
             'data'    => $result,
             'msg' => $msg
@@ -22,15 +18,9 @@ class BaseController extends Controller
         return response()->json($response, 200);
     }
 
-
-    /**
-     * return error response.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function sendError($error, $errorMessages = [])
+    public function sendError($error, $errorMessages = []): \Illuminate\Http\JsonResponse
     {
-    	$response = [
+        $response = [
             'success' => false,
             'message' => $error,
         ];

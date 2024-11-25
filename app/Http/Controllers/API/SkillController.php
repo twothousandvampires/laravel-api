@@ -2,74 +2,89 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Services\Log;
 use App\Models\Character;
 use App\Models\GemSkillList;
 use App\Models\GemSkills;
+use App\Models\Item;
+use App\Models\SkillList;
 use App\Models\SkillProperty;
+use App\Models\Skills;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class SkillController extends BaseController
 {
-    public function getList(): \Illuminate\Database\Eloquent\Collection
+    public function getSkills($char_id, $item_id): \Illuminate\Http\JsonResponse
     {
-        return GemSkillList::all();
+        $exist = Skills::where('char_id', $char_id)->where('item_id', $item_id)->get();
+        if(!count($exist)){
+            $player_skills = Skills::where('char_id', $char_id)->where('level', '!=', 0)->pluck('skill_name')->toArray();
+            $exist = SkillList::inRandomOrder()->whereNotIn('skill_name', $player_skills)->limit(3)->get();
+            foreach ($exist as $item){
+                Skills::create([
+                    'char_id' => $char_id,
+                    'item_id' => $item_id,
+                    'skill_name' => $item['skill_name'],
+                    'skill_type' => $item['skill_type']
+                ]);
+            }
+            $exist = Skills::where('char_id', $char_id)->where('item_id', $item_id)->get();
+        }
+
+        return $this->sendResponse($exist);
     }
-    public function upAmplification($id){
 
-        $amp = SkillProperty::find($id);
-
-        $amp->level ++;
-        $amp->save();
-
-        SkillProperty::where('skill_id', $amp->skill_id)->where('level', 0)->delete();
-
-        return [
-            'success' => true,
-            'data' => $amp
-        ];
-    }
-
-    public function upSkill($id, Request $request): array
+    public function learnSkill($char_id, Request $request): \Illuminate\Http\JsonResponse
     {
-        $skill = GemSkills::find($id);
-        if($skill->level < GemSkills::MAX_SKILL_LEVEL){
-            $skill->level ++;
-            $skill->save();
-            $character = Character::find($request->player_id);
-            $character->exp -= $request->exp_cost;
-            $character->save();
-            return [
-                'success' => true,
-            ];
+        $log = App::make(Log::class);
+        if(!$request->skill_id){
+            $player_skills = Skills::where('char_id', $char_id)->pluck('skill_name')->toArray();
+            $skill = SkillList::inRandomOrder()->whereNotIn('skill_name', $player_skills)->first();
+            Skills::create([
+                'char_id' => $char_id,
+                'item_id' => null,
+                'skill_name' => $skill['skill_name'],
+                'skill_type' => $skill['skill_type'],
+                'level' => 1
+            ]);
+            $log->addToLog('we');
+            $character = Character::find($char_id);
+            return $this->sendResponse($character);
         }
         else{
-            return [
-                'success' => false,
-                'msg' => 'max skill level'
-            ];
+            $skill = Skills::find($request->skill_id);
+            $item = Item::find($skill->item_id);
+
+            $skill->level ++;
+            $skill->item_id = null;
+            $skill->save();
+
+            $character = Character::find($item->char_id);
+
+            $item->delete();
+
+            return $this->sendResponse($character);
         }
+
     }
 
-    public function upgradeAmplification($id, Request $request,): array
+    public function upgradeSkill($char_id, Request $request): \Illuminate\Http\JsonResponse|bool
     {
-        $amp = SkillProperty::find($id);
-        if($amp->level >= $amp->max_level){
-            return [
-                'success' => false,
-                'data' => 'maximum level!'
-            ];
+        if(!$request->skill_id){
+            $skill = Skills::where('char_id', $char_id)->where('level', '!=', 0)->inRandomOrder()->first();
         }
-        $amp->level ++;
-        $amp->save();
+        else{
+            $skill = Skills::find($request->skill_id);
+        }
+        if($skill){
+            $skill->level ++;
+            $skill->save();
+            $character = Character::find($skill->char_id);
 
-        $character = Character::find($request->player_id);
-        $character->exp -= $request->exp_cost;
-        $character->save();
+            return $this->sendResponse($character);
+        }
 
-        return [
-            'success' => true,
-            'data' => $amp
-        ];
+        return $this->sendError('no skill to upgrade');
     }
-
 }
