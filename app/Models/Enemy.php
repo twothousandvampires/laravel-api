@@ -17,15 +17,21 @@ class enemy extends Model
 
     static function getEnemyByDistance($content_type, $distance){
 
+        if($distance > 3){
+            $distance = 3;
+        }
+        
         return Enemy::leftJoin('enemy_types as et','enemies.type_id','=','et.id')
             ->leftJoin('enemy_count as ec', function ($join) use($distance){
                 $join->on('ec.enemy_id','=','enemies.id')
                     ->where('ec.distance', $distance);
 
             })
-            ->where('enemies.type_id', $content_type)
+            ->when($content_type <= 4, function($query) use($content_type) {
+                $query->where('enemies.type_id', $content_type);
+            })
             ->whereNotNull('ec.distance')
-            ->orderBy('enemies.line', 'asc')
+            ->inRandomOrder()
             ->get();
     }
 }

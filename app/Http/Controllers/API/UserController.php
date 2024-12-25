@@ -11,9 +11,11 @@ class UserController extends BaseController
     {
 
         $user = User::find(Auth::user()->id);
+
         if (!$user) {
             return $this->sendError('User not found.');
         }
+        
         $user->characters = $user->character()->get();
 
         return $this->sendResponse($user, 'user');

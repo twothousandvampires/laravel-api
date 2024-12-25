@@ -23,7 +23,7 @@ class NodeContentService
 
         if($node->type == Node::TYPE_ENEMY){
 
-            $r = mt_rand(1,3);
+            $r = mt_rand(1,5);
             $node_content->content_type = $r;
 
             $content = json_decode('{}');
@@ -92,8 +92,8 @@ class NodeContentService
                 ->get()[0];
 
             $template->chance = 100;
-            $template->min_count *= $distance + 1;
-            $template->max_count *= $distance + 1;
+            $template->min_count = 1 + $distance;
+            $template->max_count = 2 + $distance;
         }
         else if($node_type === NodeContent::OBJECT_TYPE_ABANDONED_FORGE){
             $enemies = Enemy::leftJoin('enemy_count as ec', function ($join){
@@ -137,15 +137,24 @@ class NodeContentService
         $first_line_reserved = [];
         $second_line_reserved = [];
 
-        $max_count = 4;
+        $max_count = 3;
 
         if($distance == 1){
-            $max_count = 8;
+            $max_count = 5;
         }
         else if($distance == 2){
-            $max_count = 12;
+            $max_count = 7;
         }
         else if($distance == 3){
+            $max_count = 9;
+        }
+        else if($distance == 4){
+            $max_count = 11;
+        }
+        else if($distance == 5){
+            $max_count = 13;
+        }
+        else if($distance == 6){
             $max_count = 15;
         }
 
@@ -258,11 +267,7 @@ class NodeContentService
     public function generateGroup($node, $type): array
     {
         $distance = sqrt(pow($node->x, 2) + pow($node->y, 2));
-        $distance = floor($distance/25);
-
-        if($distance > 3){
-            $distance = 3;
-        }
+        $distance = floor($distance/20);
 
         $group_array = enemy::getEnemyByDistance($type, $distance);
         $group = $this->compactGroup($group_array, $distance);
@@ -307,6 +312,31 @@ class NodeContentService
                 ->where('type', Item::ITEM_TYPE_EQUIP)
                 ->where('rarity','<=', $rarity)
                 ->where('edl.equip_class', 3)
+                ->inRandomOrder()
+                ->first();
+
+            return $item ? $item->name : null;
+        }
+        else if($content_type === 4){
+            if($rnd > 60){
+                return null;
+            }
+            $rarity = $this->generateRarity();
+            $item = ItemsList::leftJoin('game_data.used_detail_list as udl', 'udl.item_list_id', '=' , 'item_List.id')
+                ->where('type', Item::ITEM_TYPE_USED)
+                ->where('rarity','<=', $rarity)
+                ->where('udl.used_type', 3)
+                ->inRandomOrder()
+                ->first();
+
+            return $item ? $item->name : null;
+        }
+        else if($content_type === 5){
+            if($rnd > 20){
+                return null;
+            }
+            $rarity = $this->generateRarity();
+            $item = ItemsList::where('rarity','<=', $rarity)
                 ->inRandomOrder()
                 ->first();
 

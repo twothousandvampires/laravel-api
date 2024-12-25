@@ -36,7 +36,20 @@ class Character extends Model
         $decoded = json_decode($node_content->content);
         $this->exp += $decoded->enemy->total_exp;
         $this->enemies_killed += $decoded->enemy->total_count;
-        $this->save();
+    }
+
+    public function addLife($amount){
+        $this->life += $amount;
+        if($this->life > $this->max_life){
+            $this->life = $this->max_life;
+        }
+    }
+
+    public function addMana($amount){
+        $this->mana += $amount;
+        if($this->mana > $this->max_mana){
+            $this->mana = $this->max_mana;
+        }
     }
 
     public function getItemsAttribute(): \Illuminate\Database\Eloquent\Collection
@@ -45,7 +58,7 @@ class Character extends Model
     }
     public function getPassivesAttribute(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->hasMany(Passives::class, 'char_id', 'id')->get();
+        return $this->hasMany(Passives::class, 'char_id', 'id')->with('stats')->get();
     }
     public function getSkillsAttribute(): \Illuminate\Database\Eloquent\Collection
     {

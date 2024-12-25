@@ -2,13 +2,29 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\enemy;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Fabrics\ActionsFabric;
 
-class ApiController extends BaseController
+class ApiController
 {
-    public function enemyList(): \Illuminate\Http\Response
+    public function __invoke($action = false, Request $request): \Illuminate\Http\JsonResponse
     {
-        $enemy_list = enemy::all()->pluck('name');
-        return $this->sendResponse($enemy_list);
+   
+        if(!$action){
+            return response()->json('no action', 200);
+        }
+
+        $action = ActionsFabric::createAction($action);
+
+        $check = $action->check($request);
+
+        if($check['success']){
+            $res = $action->do($request);
+            return response()->json($res, 200);
+        }
+        else{
+            return response()->json($check['message'], 400);
+        }
     }
 }

@@ -12,11 +12,13 @@ use App\Models\ItemsList;
 use App\Models\Passives;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use App\Models\UsedDetail;
+use App\Http\Services\InventoryService;
 
 class ItemController extends BaseController
 {
 
-    public function upgradeQuality($char_id, $item_id): \Illuminate\Http\JsonResponse
+    public function upgradeQuality($char_id, $item_id, $used_id, ItemService $itemService): \Illuminate\Http\JsonResponse
     {
         $item = Item::find($item_id);
 
@@ -39,11 +41,29 @@ class ItemController extends BaseController
             $prop->save();
         }
 
+        $used = Item::find($used_id);
+        $itemService->useUsed($used);
+        
         $item->fresh();
 
         return $this->sendResponse(['items' => Item::where('char_id', $char_id)->get()]);
     }
-    public function upgradeEffect($char_id, $item_id): \Illuminate\Http\JsonResponse
+
+    public function useItems($char_id, Request $request, ItemService $itemService): \Illuminate\Http\JsonResponse
+    {
+        $character = Character::find($char_id);
+        if($character){
+            foreach ($request->data as $data){
+                $item = Item::where('id', $data)->first();
+                $itemService->useUsed($item, $character);
+            }
+            return $this->sendResponse($character);
+        }
+
+       return $this->sendError('character not found');
+    }
+
+    public function upgradeEffect($char_id, $item_id, $used_id, ItemService $itemService): \Illuminate\Http\JsonResponse
     {
         $item = Item::find($item_id);
 
@@ -52,13 +72,112 @@ class ItemController extends BaseController
         $details->inc_effect += $effect;
         $details->save();
 
+        $used = Item::find($used_id);
+        $itemService->useUsed($used);
+
         $item->fresh();
 
         return $this->sendResponse(['items' => Item::where('char_id', $char_id)->get()]);
     }
-    public function addProperty($char_id, $item_id, Request $request){
+    private function TypeIntToStr($type){
+        if($type == 1){
+            return 'weapon';
+        }
+        else if($type == 2){
+            return 'armour';
+        }
+        else if($type == 3){
+            return 'accessory';
+        }
+    }
+    private function ClassIntToStr($class){
+        if($class == 1){
+            return 'combat';
+        }
+        else if($class == 2){
+            return 'sorcery';
+        }
+        else if($class == 3){
+            return 'movement';
+        }
+    }
+    public function createFromInv(Request $request, ItemService $itemService, InventoryService $inventoryService){
+        $character = Character::find($request->char_id);
+        
+        $base_chance = 25;
+        $chance = $character->synthesis + $base_chance;
+
+        $slot = $inventoryService->getFreeSlots($character->id);
+        if($character && $slot){
+            $items = Item::where('char_id', $character->id)
+            ->where('type', 1)
+            ->where('slot', '>', 8)
+            ->orderBy('slot')
+            ->limit(3)
+            ->get();
+            if(count($items) === 3){
+                $ids = $items->map(function($elem){
+                    return $elem->id;
+                });
+                Item::whereIn('id', $ids)->delete();
+                if($chance >= mt_rand(0, 100)){
+
+                    $name = ItemsList::where('type', 1)->inRandomOrder()->pluck('name')->toArray();
+                    $name = $name[array_rand($name)];
+    
+                    $itemService->createByName($name, $character->id);
+                }
+            
+                return $this->sendResponse(['items' => Item::where('char_id', $character->id)->get()]);
+            }
+        }
+
+    }
+    public function createShard(Request $request, ItemService $itemService, InventoryService $inventoryService){
+        $character = Character::find($request->char_id);
+        $slot = $inventoryService->getFreeSlots($character->id);
+
+        $base_chance = 15;
+        $chance = $base_chance + $character->splitting;
+
+        if($character && $slot){
+            $items = Item::where('char_id', $character->id)
+            ->where('slot', '>', 8)
+            ->where('type', 1)
+            ->orderBy('slot')
+            ->limit(1)
+            ->get();
+            if(count($items) === 1){
+                $ids = $items->map(function($elem){
+                    return $elem->id;
+                });
+                Item::whereIn('id', $ids)->delete();
+
+                if($chance >= mt_rand(0, 100)){
+                    
+                    $name = ItemsList::whereIn('name', ['improving dust', 'equipment parts', 'scroll design'])->pluck('name')->toArray();
+                    $name = $name[array_rand($name)];
+    
+                    $itemService->createByName($name, $character->id);
+                }
+            }
+        }
+
+        return $this->sendResponse(['items' => Item::where('char_id', $character->id)->get()]);
+    }
+    public function addProperty($char_id, $item_id, $used_id, Request $request, ItemService $itemService){
         $item = Item::find($item_id);
         $details = EquipDetail::where('item_id', $item->id)->first();
+
+        $count = Property::where('item_id', $item->id)->count();
+
+        if($count >= $details->max_property_count && $request->prop_type != 'all'){
+            return $this->sendError('maximum count of properties');
+        }
+
+        $used = Item::find($used_id);
+        $itemService->useUsed($used);
+        
         switch ($request->prop_type){
             case 'all':
                 $prop = EquipPropertiesList::select('id', ITEM::QUALITY[$details->equip_quality], 'stat' , 'name', 'sub_type')->inRandomOrder()->first();
@@ -66,6 +185,49 @@ class ItemController extends BaseController
                    'name' => $prop->name,
                    'item_id' => $item_id,
                    'stat' => $prop->stat,
+                    'sub_type' => $prop->sub_type,
+                    'value' => $prop[ITEM::QUALITY[$details->equip_quality]],
+                    'prop_list_id' => $prop->id
+                ]);
+                return $this->sendResponse(['items' => Item::where('char_id', $char_id)->get()]);
+            case 'item':
+                    $prop = EquipPropertiesList::where('type', $this->TypeIntToStr($details->equip_type))
+                    ->where('class', $this->ClassIntToStr($details->equip_class))
+                    ->where('item_name', '!=', $item->name)
+                    ->whereNull('requared_slot')
+                    ->select('id', ITEM::QUALITY[$details->equip_quality], 'stat' , 'name', 'sub_type')->inRandomOrder()->first();
+                    Property::create([
+                       'name' => $prop->name,
+                       'item_id' => $item_id,
+                       'stat' => $prop->stat,
+                        'sub_type' => $prop->sub_type,
+                        'value' => $prop[ITEM::QUALITY[$details->equip_quality]],
+                        'prop_list_id' => $prop->id
+                    ]);
+                    return $this->sendResponse(['items' => Item::where('char_id', $char_id)->get()]);
+            case 'class':
+                    $prop = EquipPropertiesList::where('class', $this->ClassIntToStr($details->equip_class))
+                    ->where('item_name', '!=', $item->name)
+                    ->whereNull('requared_slot')
+                    ->select('id', ITEM::QUALITY[$details->equip_quality], 'stat' , 'name', 'sub_type')->inRandomOrder()->first();
+                    Property::create([
+                        'name' => $prop->name,
+                        'item_id' => $item_id,
+                        'stat' => $prop->stat,
+                        'sub_type' => $prop->sub_type,
+                        'value' => $prop[ITEM::QUALITY[$details->equip_quality]],
+                        'prop_list_id' => $prop->id
+                    ]);
+                    return $this->sendResponse(['items' => Item::where('char_id', $char_id)->get()]);
+            case 'type':
+                $prop = EquipPropertiesList::where('type', $this->TypeIntToStr($details->equip_type))
+                ->where('item_name', '!=', $item->name)
+                
+                ->select('id', ITEM::QUALITY[$details->equip_quality], 'stat' , 'name', 'sub_type')->inRandomOrder()->first();
+                Property::create([
+                    'name' => $prop->name,
+                    'item_id' => $item_id,
+                    'stat' => $prop->stat,
                     'sub_type' => $prop->sub_type,
                     'value' => $prop[ITEM::QUALITY[$details->equip_quality]],
                     'prop_list_id' => $prop->id
@@ -250,8 +412,8 @@ class ItemController extends BaseController
             return $this->sendError('character not found');
         }
 
-        $from = Item::where('slot', $request->from)->first();
-        $to = Item::where('slot', $request->to)->first();
+        $from = Item::where('slot', $request->from)->where('char_id', $char_id)->first();
+        $to = Item::where('slot', $request->to)->where('char_id', $char_id)->first();
 
         if ($to) {
             $temp_slot = $from->slot;
@@ -381,16 +543,14 @@ class ItemController extends BaseController
         return ItemsList::all();
     }
 
-    public function create(Request $request, ItemService $itemService): \Illuminate\Http\JsonResponse
-    {
-        if ($request->item_name) {
-            $item = $itemService->createByName($request->item_name, $request->char_id);
-        } else {
-            $item = $itemService->createRandomItem($request->char_id);
-        }
-        return $this->sendResponse(['item' => $item], 'Successfully.');
+    // public function create(Request $request, ItemService $itemService): \Illuminate\Http\JsonResponse
+    // {
+      
+    //     $item = $itemService->createByName($request->item_name, $request->char_id);
 
-    }
+    //     return $this->sendResponse(['item' => $item], 'Successfully.');
+
+    // }
 
     public function delete(Request $request): \Illuminate\Http\JsonResponse
     {
