@@ -40,6 +40,11 @@ class ActionsFabric
 
     static public function createAction($action_name)
     {
-        return new ActionsFabric::$actions_map[$action_name]();
+        if(isset(ActionsFabric::$actions_map[$action_name])){
+            return new ActionsFabric::$actions_map[$action_name]();
+        }
+        else{
+            return false;
+        }
     }
 }
