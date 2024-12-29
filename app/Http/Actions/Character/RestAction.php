@@ -1,11 +1,12 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\Character;
 
 use App\Models\Character;
 use App\Models\Node;
 use App\Http\Services\PassiveService;
 use Illuminate\Support\Facades\App;
 use App\Http\Services\Log;
+use App\Http\Actions\Action;
 
 class RestAction extends Action
 {

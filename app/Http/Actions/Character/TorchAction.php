@@ -1,8 +1,9 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\Character;
 
 use App\Models\Character;
 use App\Models\Node;
+use App\Http\Actions\Action;
 
 class TorchAction extends Action
 {

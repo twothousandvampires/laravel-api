@@ -1,7 +1,8 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\User;
 
 use Illuminate\Support\Facades\Auth;
+use App\Http\Actions\Action;
 
 class LoginAction extends Action
 {
@@ -16,7 +17,7 @@ class LoginAction extends Action
             $this->addData(['token' => $token]);
         }
         else{
-            $this->setUnsucces('wrong password or email');
+            $this->setUnsuccess('wrong password or email');
         }
 
         return $this->answer;

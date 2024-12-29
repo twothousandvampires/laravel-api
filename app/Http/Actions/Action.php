@@ -4,7 +4,7 @@ namespace App\Http\Actions;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Character;
 
-class Action
+abstract class Action
 {
     public $auth = true;
     public $character = true;

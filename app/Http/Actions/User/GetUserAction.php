@@ -1,8 +1,9 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\User;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Actions\Action;
 
 class GetUserAction extends Action
 {

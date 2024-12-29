@@ -1,9 +1,10 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\User;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Validator;
+use App\Http\Actions\Action;
 
 class RegistrationAction extends Action
 {

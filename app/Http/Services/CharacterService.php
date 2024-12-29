@@ -7,10 +7,11 @@ use Illuminate\Support\Facades\Auth;
 
 class CharacterService{
 
-    public function createCharacter($req, NodeService $nodeService){
+    public function createCharacter($req){
+        $nodeService = new NodeService();
         $char = new Character();
         $char->name = $req->name;
-        $char->user_id = Auth::user()->id;
+        $char->user_id = auth('api')->user()->id;
         $char->x = 0;
         $char->y = 0;
         $char->save();

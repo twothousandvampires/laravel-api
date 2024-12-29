@@ -1,9 +1,10 @@
 <?php 
-namespace App\Http\Actions;
+namespace App\Http\Actions\Item;
 
 use App\Models\Character;
 use App\Models\Node;
 use App\Http\Services\ItemService;
+use App\Http\Actions\Action;
 
 class CreateItemAction extends Action
 {
